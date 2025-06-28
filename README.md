@@ -120,8 +120,8 @@ This project is licensed under the [MIT License](LICENSE).
 
 ---
 
-## 👤 Author
+## 👤 Contributors
 
-**Contributors** 
-1. antonie shikanda
+**1. antonie shikanda** 
+
 [GitHub](https://github.com/antonie-riziki) • [LinkedIn](https://linkedin.com/in/antonie-riziki)
