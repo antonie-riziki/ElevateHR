@@ -181,3 +181,83 @@ class Employee(models.Model):
 
     def __str__(self):
         return self.fname + ' ' + self.lname + ' EHR' + self.employee_ID
+
+
+class JobPosition(models.Model):
+    job_title = models.CharField(max_length=100, unique=True)
+    job_description = models.TextField()
+    job_department = models.ForeignKey(Department, on_delete=models.CASCADE)
+    job_salary_range = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.job_title + ' ' + self.job_department
+
+class Attendance(models.Model):
+    attendance_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    attendance_date = models.DateField()
+    attendance_check_in = models.TimeField(null=True, blank=True)
+    attendance_check_out = models.TimeField(null=True, blank=True)
+    attendance_status = models.CharField(max_length=20, choices=[('Present', 'Present'), ('Absent', 'Absent'), ('Leave', 'Leave')])
+
+    def __str__(self):
+        return self.attendance_employee + ' ' + self.attendance_status
+
+
+class LeaveRequest(models.Model):
+    LEAVE_TYPES = [
+        ('Sick', 'Sick'),
+        ('Annual', 'Annual'),
+        ('Maternity', 'Maternity'),
+        ('Emergency', 'Emergency')
+    ]
+
+    leave_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    leave_type = models.CharField(max_length=50, choices=LEAVE_TYPES)
+    leave_start_date = models.DateField()
+    leave_end_date = models.DateField()
+    leave_reason = models.TextField()
+    leave_status = models.CharField(max_length=20,
+                              choices=[('Pending', 'Pending'), ('Approved', 'Approved'), ('Rejected', 'Rejected')],
+                              default='Pending')
+
+    def __str__(self):
+        return self.leave_employee + ' ' + self.leave_status
+
+
+class PerformanceReview(models.Model):
+    performance_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    performance_review_date = models.DateField()
+    performance_reviewer = models.CharField(max_length=100)
+    performance_rating = models.IntegerField()
+    performance_comments = models.TextField()
+
+    def __str__(self):
+        return self.performance_employee + ' ' + self.performance_reviewer
+
+
+class Payroll(models.Model):
+    payroll_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
+    payroll_date = models.DateField()
+    payroll_basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
+    payroll_deductions = models.DecimalField(max_digits=10, decimal_places=2)
+    payroll_net_pay = models.DecimalField(max_digits=10, decimal_places=2)
+    payroll_paid_status = models.BooleanField(default=False)
+
+    def __str__(self):
+        return self.payroll_employee + ' ' + self.payroll_date + ' ' + self.payroll_paid_status
+
+
+class Training(models.Model):
+    training_title = models.CharField(max_length=100)
+    training_description = models.TextField()
+    training_trainer = models.CharField(max_length=100)
+    training_date = models.DateField()
+    training_attendees = models.ManyToManyField(Employee)
+
+    def __str__(self):
+        return self.training_title + ' ' + self.training_trainer
+
+
+
+
+
