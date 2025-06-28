@@ -45,6 +45,7 @@ class PerformanceReviewAdmin(admin.ModelAdmin):
     search_fields = ('performance_employee', 'performance_reviewer', 'performance_rating')
     list_filter = ('performance_employee', 'performance_reviewer', 'performance_rating')
 
+
 @admin.register(Payroll)
 class PayrollAdmin(admin.ModelAdmin):
     list_display = ('payroll_employee', 'payroll_date', 'payroll_paid_status')
