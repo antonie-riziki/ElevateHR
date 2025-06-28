@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ElevateHR - Register</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal.show {
+            display: block;
+        }
+        .otp-input {
+            width: 50px;
+            height: 50px;
+            text-align: center;
+            font-size: 1.5rem;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 0 5px;
+        }
+        .otp-input:focus {
+            border-color: #3b82f6;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div class="flex items-center justify-center min-h-screen p-4">
+        <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+            <!-- Header -->
+            <div class="text-center mb-8">
+                <div class="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-users text-white text-2xl"></i>
+                </div>
+                <h1 class="text-2xl font-bold text-gray-800">Create Account</h1>
+                <p class="text-gray-600 mt-2">Join our HR Management System</p>
+            </div>
+
+            <!-- Social Login Buttons -->
+            <div class="space-y-3 mb-6">
+                <button onclick="handleSocialLogin('Google')" class="w-full flex items-center justify-center gap-2 h-12 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24">
+                        <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                        <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                        <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
+                        <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+                    </svg>
+                    Continue with Google
+                </button>
+
+                <button onclick="handleSocialLogin('Facebook')" class="w-full flex items-center justify-center gap-2 h-12 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-5 h-5 bg-blue-600 rounded flex items-center justify-center">
+                        <span class="text-white text-sm font-bold">f</span>
+                    </div>
+                    Continue with Facebook
+                </button>
+
+                <button onclick="handleSocialLogin('LinkedIn')" class="w-full flex items-center justify-center gap-2 h-12 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+                    <div class="w-5 h-5 bg-blue-700 rounded flex items-center justify-center">
+                        <span class="text-white text-xs font-bold">in</span>
+                    </div>
+                    Continue with LinkedIn
+                </button>
+            </div>
+
+            <!-- Divider -->
+            <div class="relative mb-6">
+                <div class="absolute inset-0 flex items-center">
+                    <div class="w-full border-t border-gray-300"></div>
+                </div>
+                <div class="relative flex justify-center text-sm">
+                    <span class="px-2 bg-white text-gray-500">Or register with email</span>
+                </div>
+            </div>
+
+            <!-- Registration Form -->
+            <form id="registrationForm" class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
+                        <input id="firstName" name="firstName" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                    <div>
+                        <label for="lastName" class="block text-sm font-medium text-gray-700">Last Name</label>
+                        <input id="lastName" name="lastName" type="text" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <div class="relative mt-1">
+                        <i class="fas fa-envelope absolute left-3 top-3 text-gray-400"></i>
+                        <input id="email" name="email" type="email" required class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <div class="relative mt-1">
+                        <i class="fas fa-phone absolute left-3 top-3 text-gray-400"></i>
+                        <input id="phone" name="phone" type="tel" required class="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="+1 (555) 123-4567">
+                    </div>
+                </div>
+
+                <div>
+                    <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+                    <div class="relative mt-1">
+                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                        <input id="password" name="password" type="password" required class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" onclick="togglePassword('password')" class="absolute right-3 top-3 text-gray-400">
+                            <i class="fas fa-eye" id="password-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div>
+                    <label for="confirmPassword" class="block text-sm font-medium text-gray-700">Confirm Password</label>
+                    <div class="relative mt-1">
+                        <i class="fas fa-lock absolute left-3 top-3 text-gray-400"></i>
+                        <input id="confirmPassword" name="confirmPassword" type="password" required class="block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500">
+                        <button type="button" onclick="togglePassword('confirmPassword')" class="absolute right-3 top-3 text-gray-400">
+                            <i class="fas fa-eye" id="confirmPassword-eye"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <button type="submit" id="registerBtn" class="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                    Register
+                </button>
+            </form>
+
+            <div class="text-center mt-6">
+                <p class="text-gray-600">
+                    Already have an account?
+                    <a href="/login" class="text-blue-600 hover:underline font-medium">Sign in</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- OTP Verification Modal -->
+    <div id="otpModal" class="modal">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <i class="fas fa-mobile-alt text-green-600 text-2xl"></i>
+                    </div>
+                    <h2 class="text-xl font-bold text-gray-800 mb-2">Verify Your Phone Number</h2>
+                    <p class="text-gray-600 mb-6">
+                        We've sent a 6-digit verification code to<br>
+                        <span class="font-medium" id="phoneDisplay"></span>
+                    </p>
+
+                    <div class="flex justify-center mb-6">
+                        <input type="text" class="otp-input" maxlength="1" id="otp1">
+                        <input type="text" class="otp-input" maxlength="1" id="otp2">
+                        <input type="text" class="otp-input" maxlength="1" id="otp3">
+                        <input type="text" class="otp-input" maxlength="1" id="otp4">
+                        <input type="text" class="otp-input" maxlength="1" id="otp5">
+                        <input type="text" class="otp-input" maxlength="1" id="otp6">
+                    </div>
+
+                    <div class="space-y-3">
+                        <button onclick="verifyOTP()" id="proceedBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 rounded-lg transition-colors" disabled>
+                            Proceed
+                        </button>
+
+                        <button onclick="resendCode()" class="text-blue-600 hover:underline text-sm">
+                            Didn't receive the code? Resend
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Form submission handler
+        document.getElementById('registrationForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (password !== confirmPassword) {
+                alert('Passwords do not match!');
+                return;
+            }
+
+            const phone = document.getElementById('phone').value;
+            document.getElementById('phoneDisplay').textContent = phone;
+
+            // Show loading state
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.textContent = 'Sending Code...';
+            registerBtn.disabled = true;
+
+            // Simulate sending OTP
+            setTimeout(() => {
+                registerBtn.textContent = 'Register';
+                registerBtn.disabled = false;
+                document.getElementById('otpModal').classList.add('show');
+                document.getElementById('otp1').focus();
+            }, 2000);
+        });
+
+        // Social login handler
+        function handleSocialLogin(provider) {
+            alert(`${provider} login integration would be implemented here.`);
+        }
+
+        // Password toggle functionality
+        function togglePassword(fieldId) {
+            const field = document.getElementById(fieldId);
+            const eye = document.getElementById(fieldId + '-eye');
+
+            if (field.type === 'password') {
+                field.type = 'text';
+                eye.classList.remove('fa-eye');
+                eye.classList.add('fa-eye-slash');
+            } else {
+                field.type = 'password';
+                eye.classList.remove('fa-eye-slash');
+                eye.classList.add('fa-eye');
+            }
+        }
+
+        // OTP input handling
+        document.querySelectorAll('.otp-input').forEach((input, index) => {
+            input.addEventListener('input', function() {
+                if (this.value.length === 1 && index < 5) {
+                    document.getElementById(`otp${index + 2}`).focus();
+                }
+                checkOTPComplete();
+            });
+
+            input.addEventListener('keydown', function(e) {
+                if (e.key === 'Backspace' && this.value === '' && index > 0) {
+                    document.getElementById(`otp${index}`).focus();
+                }
+            });
+        });
+
+        function checkOTPComplete() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otpValues = Array.from(otpInputs).map(input => input.value);
+            const isComplete = otpValues.every(value => value !== '');
+
+            document.getElementById('proceedBtn').disabled = !isComplete;
+        }
+
+        function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otpCode = Array.from(otpInputs).map(input => input.value).join('');
+
+            if (otpCode.length !== 6) {
+                alert('Please enter a valid 6-digit code.');
+                return;
+            }
+
+            // Show loading state
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.textContent = 'Verifying...';
+            proceedBtn.disabled = true;
+
+            // Simulate verification
+            setTimeout(() => {
+                alert('Registration Successful! Welcome to HR Management System!');
+                // Redirect to home page
+                window.location.href = '/';
+            }, 1000);
+        }
+
+        function resendCode() {
+            alert('Verification code resent!');
+            // Clear OTP inputs
+            document.querySelectorAll('.otp-input').forEach(input => {
+                input.value = '';
+            });
+            document.getElementById('otp1').focus();
+            checkOTPComplete();
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('otpModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.classList.remove('show');
+            }
+        });
+    </script>
+</body>
+</html>
