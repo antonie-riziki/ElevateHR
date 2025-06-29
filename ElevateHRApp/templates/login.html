@@ -86,7 +86,8 @@
             </div>
 
             <!-- Login Form -->
-            <form id="loginForm" class="space-y-4">
+            <form id="loginForm" method="POST" action="{% url 'send_otp' %}" class="space-y-4">
+                {% csrf_token %}
                 <div>
                     <label for="email" class="block text-sm font-medium text-gray-700">Email Address</label>
                     <div class="relative mt-1">
@@ -176,110 +177,108 @@
     </div>
 
     <script>
-        // Form submission handler
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
-            e.preventDefault();
+    // Send OTP on login form submit
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+        e.preventDefault();
 
-            const phone = document.getElementById('phone').value;
-            document.getElementById('phoneDisplay').textContent = phone;
+        const formData = new FormData(this);
+        const loginBtn = document.getElementById('loginBtn');
+        loginBtn.textContent = 'Sending Code...';
+        loginBtn.disabled = true;
 
-            // Show loading state
-            const loginBtn = document.getElementById('loginBtn');
-            loginBtn.textContent = 'Sending Code...';
-            loginBtn.disabled = true;
-
-            // Simulate sending OTP
-            setTimeout(() => {
-                loginBtn.textContent = 'Sign In';
-                loginBtn.disabled = false;
-                document.getElementById('otpModal').classList.add('show');
-                document.getElementById('otp1').focus();
-            }, 2000);
+        const response = await fetch('/send-otp/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
         });
 
-        // Social login handler
-        function handleSocialLogin(provider) {
-            alert(`${provider} login integration would be implemented here.`);
-        }
+        const data = await response.json();
 
-        // Password toggle functionality
-        function togglePassword(fieldId) {
-            const field = document.getElementById(fieldId);
-            const eye = document.getElementById(fieldId + '-eye');
+        loginBtn.textContent = 'Sign In';
+        loginBtn.disabled = false;
 
-            if (field.type === 'password') {
-                field.type = 'text';
-                eye.classList.remove('fa-eye');
-                eye.classList.add('fa-eye-slash');
-            } else {
-                field.type = 'password';
-                eye.classList.remove('fa-eye-slash');
-                eye.classList.add('fa-eye');
-            }
-        }
-
-        // OTP input handling
-        document.querySelectorAll('.otp-input').forEach((input, index) => {
-            input.addEventListener('input', function() {
-                if (this.value.length === 1 && index < 5) {
-                    document.getElementById(`otp${index + 2}`).focus();
-                }
-                checkOTPComplete();
-            });
-
-            input.addEventListener('keydown', function(e) {
-                if (e.key === 'Backspace' && this.value === '' && index > 0) {
-                    document.getElementById(`otp${index}`).focus();
-                }
-            });
-        });
-
-        function checkOTPComplete() {
-            const otpInputs = document.querySelectorAll('.otp-input');
-            const otpValues = Array.from(otpInputs).map(input => input.value);
-            const isComplete = otpValues.every(value => value !== '');
-
-            document.getElementById('proceedBtn').disabled = !isComplete;
-        }
-
-        function verifyOTP() {
-            const otpInputs = document.querySelectorAll('.otp-input');
-            const otpCode = Array.from(otpInputs).map(input => input.value).join('');
-
-            if (otpCode.length !== 6) {
-                alert('Please enter a valid 6-digit code.');
-                return;
-            }
-
-            // Show loading state
-            const proceedBtn = document.getElementById('proceedBtn');
-            proceedBtn.textContent = 'Verifying...';
-            proceedBtn.disabled = true;
-
-            // Simulate verification
-            setTimeout(() => {
-                alert('Login Successful! Welcome to ElevateHR !');
-                // Redirect to home page
-                window.location.href = "{% url 'home' %}";
-            }, 1000);
-        }
-
-        function resendCode() {
-            alert('Verification code resent!');
-            // Clear OTP inputs
-            document.querySelectorAll('.otp-input').forEach(input => {
-                input.value = '';
-            });
+        if (response.ok) {
+            document.getElementById('phoneDisplay').textContent = data.phone;
+            document.getElementById('otpModal').classList.add('show');
             document.getElementById('otp1').focus();
-            checkOTPComplete();
+        } else {
+            alert(data.error || 'Failed to send OTP');
+        }
+    });
+
+    // Verify OTP
+    async function verifyOTP() {
+        const otpInputs = document.querySelectorAll('.otp-input');
+        const otpCode = Array.from(otpInputs).map(input => input.value).join('');
+        const phone = document.getElementById('phone').value;
+
+        if (otpCode.length !== 6) {
+            alert('Please enter a valid 6-digit code.');
+            return;
         }
 
-        // Close modal when clicking outside
-        document.getElementById('otpModal').addEventListener('click', function(e) {
-            if (e.target === this) {
-                this.classList.remove('show');
+        const proceedBtn = document.getElementById('proceedBtn');
+        proceedBtn.textContent = 'Verifying...';
+        proceedBtn.disabled = true;
+
+        const response = await fetch('/verify-otp/', {
+            method: 'POST',
+            body: new URLSearchParams({ 'otp': otpCode, 'phone': phone }),
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                'Content-Type': 'application/x-www-form-urlencoded'
             }
         });
-    </script>
+
+        const data = await response.json();
+
+        proceedBtn.textContent = 'Proceed';
+        proceedBtn.disabled = false;
+
+        if (response.ok) {
+            alert('Login successful! Redirecting...');
+            window.location.href = "{% url 'home' %}";
+        } else {
+            alert(data.error || 'OTP verification failed.');
+        }
+    }
+
+    // OTP Input Movement
+    document.querySelectorAll('.otp-input').forEach((input, index) => {
+        input.addEventListener('input', () => {
+            if (input.value.length === 1 && index < 5) {
+                document.getElementById(`otp${index + 2}`).focus();
+            }
+            checkOTPComplete();
+        });
+
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && input.value === '' && index > 0) {
+                document.getElementById(`otp${index}`).focus();
+            }
+        });
+    });
+
+    function checkOTPComplete() {
+        const allFilled = Array.from(document.querySelectorAll('.otp-input')).every(input => input.value !== '');
+        document.getElementById('proceedBtn').disabled = !allFilled;
+    }
+
+    function resendCode() {
+        alert('Verification code resent!');
+        document.querySelectorAll('.otp-input').forEach(input => input.value = '');
+        document.getElementById('otp1').focus();
+        checkOTPComplete();
+    }
+
+    document.getElementById('otpModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('show');
+        }
+    });
+</script>
+
 </body>
 </html>

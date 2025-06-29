@@ -86,7 +86,8 @@
             </div>
 
             <!-- Registration Form -->
-            <form id="registrationForm" class="space-y-4">
+            <form id="registrationForm" method="POST" class="space-y-4" action="{% url 'send_otp' %}">
+                {% csrf_token %}
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label for="firstName" class="block text-sm font-medium text-gray-700">First Name</label>
@@ -188,6 +189,73 @@
     </div>
 
     <script>
+        // Trigger OTP Modal
+        document.getElementById('registrationForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const registerBtn = document.getElementById('registerBtn');
+            registerBtn.textContent = 'Sending Code...';
+            registerBtn.disabled = true;
+
+            const response = await fetch('/send-otp/', {
+                method: 'POST',
+                body: formData,
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                document.getElementById('phoneDisplay').textContent = data.phone;
+                document.getElementById('otpModal').classList.add('show');
+                document.getElementById('otp1').focus();
+            } else {
+                alert(data.error || 'Failed to send OTP');
+            }
+
+            registerBtn.textContent = 'Register';
+            registerBtn.disabled = false;
+        });
+
+
+        // Verify OTP Code
+        async function verifyOTP() {
+            const otpInputs = document.querySelectorAll('.otp-input');
+            const otpCode = Array.from(otpInputs).map(input => input.value).join('');
+            const phone = document.getElementById('phone').value;
+
+            const proceedBtn = document.getElementById('proceedBtn');
+            proceedBtn.textContent = 'Verifying...';
+            proceedBtn.disabled = true;
+
+            const response = await fetch('/verify-otp/', {
+                method: 'POST',
+                body: new URLSearchParams({
+                    'otp': otpCode,
+                    'phone': phone
+                }),
+                headers: {
+                    'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value,
+                    'Content-Type': 'application/x-www-form-urlencoded'
+                }
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert('Registration successful!');
+                window.location.href = '/';
+            } else {
+                alert(data.error || 'OTP verification failed');
+            }
+
+            proceedBtn.textContent = 'Proceed';
+            proceedBtn.disabled = false;
+        }
+
+
+
         // Form submission handler
         document.getElementById('registrationForm').addEventListener('submit', function(e) {
             e.preventDefault();
@@ -300,6 +368,28 @@
                 this.classList.remove('show');
             }
         });
+
+
+        function verifyOTP() {
+        // Collect the OTP code
+            const otp = [
+                document.getElementById('otp1').value,
+                document.getElementById('otp2').value,
+                document.getElementById('otp3').value,
+                document.getElementById('otp4').value,
+                document.getElementById('otp5').value,
+                document.getElementById('otp6').value
+            ].join('');
+
+            // Here you should normally validate OTP via backend (AJAX, fetch, etc.)
+            // But assuming it's correct, proceed to redirect:
+            if (otp.length === 6) {
+                // Optional: show loading or success message
+                window.location.href = "{% url 'home' %}";  // ✅ Django reverse-resolves to /home
+            } else {
+                alert("Please enter the complete 6-digit OTP.");
+            }
+        }
     </script>
 </body>
 </html>
