@@ -5,6 +5,8 @@ import sys
 import secrets
 import string
 import json
+import shutil
+import tempfile
 import google.generativeai as genai
 
 from dotenv import load_dotenv
@@ -15,7 +17,8 @@ sys.path.insert(1, './ElevateHRApp')
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.core.files.storage import FileSystemStorage
 
 from rag_model import get_qa_chain, query_system
 
@@ -120,6 +123,33 @@ def get_gemini_response(prompt):
 
     return response.text
 
+
+@csrf_exempt  # remove this in production, use CSRF token
+def process_candidates(request):
+    if request.method == 'POST':
+        prompt = request.POST.get('prompt', '')
+
+        # Create a temp directory
+        temp_dir = tempfile.mkdtemp()
+
+        try:
+            # Save uploaded files to temp_dir
+            for file in request.FILES.getlist('files'):
+                fs = FileSystemStorage(location=temp_dir)
+                fs.save(file.name, file)
+
+            # Get QA chain and run query
+            qa_chain = get_qa_chain(temp_dir)
+            result = query_system(prompt, qa_chain)
+
+            # Return result as HTML or Markdown
+            return HttpResponse(result, content_type='text/html')  # or text/markdown
+        except Exception as e:
+            return HttpResponse(f"<strong>Error:</strong> {str(e)}", status=500)
+        finally:
+            # Clean up temp files
+            shutil.rmtree(temp_dir, ignore_errors=True)
+    return HttpResponse("Invalid request method.", status=400)
 
 
 # Create your views here.

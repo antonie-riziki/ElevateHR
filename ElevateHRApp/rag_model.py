@@ -17,7 +17,7 @@ from langchain_community.vectorstores import FAISS
 from langchain.docstore.document import Document
 warnings.filterwarnings("ignore")
 
-sys.path.insert(1, './src')
+# sys.path.insert(1, './src')
 # print(sys.path.insert(1, '../src/'))
 
 load_dotenv()
@@ -34,7 +34,7 @@ def load_model():
   Func loads the model and embeddings
   """
   model = ChatGoogleGenerativeAI(
-      model="models/gemini-1.5-pro-001",
+      model="models/gemini-2.0-flash",
       google_api_key=GEMINI_API_KEY,
       temperature=0.4,
       convert_system_message_to_human=True
@@ -140,7 +140,7 @@ def query_system(query: str, qa_chain):
     result = qa_chain({"query": query})
     if not result["result"] or "don't know" in result["result"].lower():
       return "The answer could not be found in the provided documents"
-    return f"MjengoBot 👷: {result['result']}" #\nSources: {[s.metadata['source'] for s in result['source_documents']]}"
+    return f"ElevateHRBot 👩‍💼: {result['result']}" #\nSources: {[s.metadata['source'] for s in result['source_documents']]}"
   except Exception as e:
     return f"Error processing query: {e}"
 
