@@ -379,6 +379,7 @@
 
             <!-- Content Area -->
             <div class="content-area">
+                {% block content %}
                 <!-- Dashboard Stats -->
                 <div class="dashboard-grid">
                     <div class="stat-card">
@@ -438,27 +439,27 @@
                 <div class="quick-actions">
                     <h2 class="section-title">Quick Actions</h2>
                     <div class="action-buttons">
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'employees' %}" class="action-btn">
                             <i class="fas fa-user-plus"></i>
                             Add New Employee
                         </a>
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'job-posting' %}" class="action-btn">
                             <i class="fas fa-briefcase"></i>
                             Post New Job
                         </a>
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'leave-management' %}" class="action-btn">
                             <i class="fas fa-calendar-check"></i>
                             Approve Leave Requests
                         </a>
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'reporting-analytics' %}" class="action-btn">
                             <i class="fas fa-file-alt"></i>
                             Generate Report
                         </a>
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'performance-management' %}" class="action-btn">
                             <i class="fas fa-poll"></i>
                             Launch Feedback Survey
                         </a>
-                        <a href="#" class="action-btn">
+                        <a href="{% url 'recruitment' %}" class="action-btn">
                             <i class="fas fa-robot"></i>
                             AI Resume Screening
                         </a>
@@ -505,6 +506,7 @@
                         </div>
                     </div>
                 </div>
+                {% endblock %}
             </div>
         </div>
     </div>

@@ -28,6 +28,7 @@ ElevateHR integrates powerful generative AI using the **Gemini API** and an **Ag
 - Human-like interactions via Langchain's conversational agents
 
 Frameworks and Libraries:
+
 - Gemini API (Google)
 - Langchain
 - FAISS for embedding-based CV search

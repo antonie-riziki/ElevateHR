@@ -135,6 +135,24 @@ def employees(request):
 def recruitment(request):
     return render(request, 'recruitment.html')
 
+def performance_management(request):
+    return render(request, 'performance_management.html')
+
+def job_posting(request):
+    return render(request, 'job_posting.html')
+
+def time_attendance(request):
+    return render(request, 'time_attendance.html')
+
+def leave_management(request):
+    return render(request, 'leave_management.html')
+
+def reporting_analytics(request):
+    return render(request, 'reporting_analytics.html')
+
+
+
+
 
 
 
