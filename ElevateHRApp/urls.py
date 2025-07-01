@@ -13,5 +13,6 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('login/', views.login, name='login'),
     path('employees/', views.employees, name='employees'),
-    path('recruitment/', views.recruitment, name='recruitment')
+    path('recruitment/', views.recruitment, name='recruitment'),
+    path('chatbot-response/', views.chatbot_response, name='chatbot_response'),
 ]

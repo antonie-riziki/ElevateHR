@@ -724,7 +724,7 @@
                         <i class="fas fa-robot"></i>
                     </div>
                     <div class="message-content">
-                        Hello! I'm your ElevateHR. I can help you with recruitment processes, candidate evaluation, and answer any HR-related questions. How can I assist you today?
+                        Hello! I'm your ElevateHR. How can I assist you today?
                     </div>
                 </div>
             </div>
@@ -890,36 +890,64 @@
                 <div class="message-content">${message}</div>
             `;
             chatbotBody.appendChild(userMessage);
-
-            // Clear input
             chatInput.value = '';
+            chatbotBody.scrollTop = chatbotBody.scrollHeight;
 
-            // Simulate bot response
-            setTimeout(() => {
+            // Loading Indicator
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'chat-message bot typing';
+            loadingMessage.innerHTML = `
+                <div class="message-avatar bot-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">...</div>
+            `;
+            chatbotBody.appendChild(loadingMessage);
+            chatbotBody.scrollTop = chatbotBody.scrollHeight;
+
+            // Send to Django
+            fetch('/chatbot-response/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatbotBody.removeChild(loadingMessage);
+
                 const botMessage = document.createElement('div');
                 botMessage.className = 'chat-message';
-
-                const responses = [
-                    "I can help you with candidate screening and evaluation processes.",
-                    "For recruitment best practices, I recommend focusing on skills-based assessments.",
-                    "Would you like me to suggest interview questions for this position?",
-                    "I can help you create job descriptions and requirements.",
-                    "Let me know if you need assistance with candidate background checks."
-                ];
-
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-
                 botMessage.innerHTML = `
                     <div class="message-avatar bot-avatar">
                         <i class="fas fa-robot"></i>
                     </div>
-                    <div class="message-content">${randomResponse}</div>
+                    <div class="message-content">${data.response}</div>
                 `;
                 chatbotBody.appendChild(botMessage);
                 chatbotBody.scrollTop = chatbotBody.scrollHeight;
-            }, 1000);
+            })
+            .catch(error => {
+                chatbotBody.removeChild(loadingMessage);
+                console.error('Error:', error);
+            });
+        }
 
-            chatbotBody.scrollTop = chatbotBody.scrollHeight;
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const trimmed = cookie.trim();
+                    if (trimmed.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
 
         // Enter key support for chat

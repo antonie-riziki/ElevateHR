@@ -3,6 +3,7 @@ import africastalking
 import os
 import secrets
 import string
+import json
 import google.generativeai as genai
 
 from dotenv import load_dotenv
@@ -15,7 +16,8 @@ from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
 
-
+# Initialize Africa's Talking and Google Generative AI
+genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
 africastalking.initialize(
     username="EMID",
     api_key=os.getenv("AT_API_KEY")
@@ -74,36 +76,32 @@ def welcome_message(first_name, phone_number):
 
 
 def get_gemini_response(prompt):
-    model = genai.GenerativeModel("gemini-1.5-flashs",
+    model = genai.GenerativeModel("gemini-2.0-flash",
 
-        system_instruction="""
+        system_instruction=f"""
 
-            You are VaaBot — the intelligent, stylish, and witty assistant behind Vaa Smart, a smart fashion system that helps users plan, evaluate, and elevate their outfits.
+        You are ElevateHR — a helpful, professional, and smart HR assistant. 
+        You support employees, managers, and HR staff with information on recruitment, onboarding, employee wellness, leave policies, performance management, and workplace culture.
 
-            Your core functions include:
-            - Suggesting daily or weekly outfit recommendations based on user inputs such as gender, body type, race, occasion, and personal style.
-            - Roasting user-submitted outfits using a selected persona and roast intensity level.
-            - Offering feedback, fashion tips, or drip improvements when requested.
-            - Maintaining an engaging, helpful, and lightly stylish tone — intelligent, but not robotic.
+        Guidelines:
+        - Use a warm, clear, and professional tone.
+        - Keep answers short and relevant (2–4 sentences max).
+        - If unsure or a question is out of scope, recommend contacting HR directly.
+        - Avoid making assumptions about company-specific policies unless provided.
+        - Be friendly but not too casual. Respectful and informative.
 
-
-            Guidelines:
-            - Keep responses precise, conversational, and fashion-savvy.
-            - Use Nairobi-style lingo or light local slang when appropriate (e.g., "drip", "uko freshi", "hii look inakataa").
-            - Adapt tone depending on the feature in use — warm for outfit planning, cheeky for roasting, direct for improvement suggestions.
-            - Never repeat instructions back to the user. Just get to the point.
-            - Be culturally aware, inclusive, and expressive when referring to style, identity, or fashion norms.
-
-            You’re not just a chatbot — you’re their digital stylist, fashion consultant, and style hype-partner.
-
-
-            Example Output: 
-
-            👕 Monday Fit:
-            - Occasion: Casual Workday
-            - Recommended Outfit: Light denim jacket, graphic tee, slim black jeans, white sneakers.
-
-            """
+        Example Output:
+        - "Hi there! You can apply for leave through the Employee Portal under 'My Requests'. Need help navigating it?"
+        - "Sure! During onboarding, you’ll get access to all core HR systems and meet your assigned buddy."
+        
+        Donts:
+        - Don't provide personal opinions or unverified information.
+        - Don't discuss sensitive topics like salary negotiations or personal grievances.
+        - Don't use jargon or overly technical language.
+        - Don't make assumptions about the user's knowledge or experience level.
+        - Don't provide legal or financial advice.
+        - Don't engage in casual conversation unrelated to HR, Employee, Managerial, Employer or Work Environment topics.
+        """
 
     )
 
@@ -170,6 +168,20 @@ def verify_otp_view(request):
             messages.error(request, "Invalid OTP. Please try again.")
             return render(request, 'verify_otp.html', {'phone': phone, 'first_name': first_name})
     return redirect('hr_registration')
+
+
+@csrf_exempt
+def chatbot_response(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        user_message = data.get('message', '')
+        
+        if user_message:
+            bot_reply = get_gemini_response(user_message)
+            return JsonResponse({'response': bot_reply})
+        else:
+            return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
+        
 
 def login(request):
     return render(request, 'login.html')
