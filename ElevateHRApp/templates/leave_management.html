@@ -1,8 +1,72 @@
-{% extends "index.html" %}
+{% extends 'index.html' %}
 
 {% block content %}
 <div class="container-fluid">
     <h1 class="mt-4">Leave Management</h1>
-    <p>This is the Leave Management page.</p>
+
+    <!-- Leave Balances -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Leave Balances</h2>
+        </div>
+        <div class="card-body">
+            <ul class="list-group">
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Vacation
+                    <span class="badge bg-primary rounded-pill">10 days</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Sick Leave
+                    <span class="badge bg-primary rounded-pill">5 days</span>
+                </li>
+                <li class="list-group-item d-flex justify-content-between align-items-center">
+                    Personal Leave
+                    <span class="badge bg-primary rounded-pill">2 days</span>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Leave Requests -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Leave Requests</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>Leave Type</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2023-06-01</td>
+                        <td>2023-06-05</td>
+                        <td>Vacation</td>
+                        <td><span class="badge bg-success">Approved</span></td>
+                        <td>
+                            <a href="#" class="btn btn-primary btn-sm">View</a>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>2023-06-10</td>
+                        <td>2023-06-10</td>
+                        <td>Sick Leave</td>
+                        <td><span class="badge bg-warning text-dark">Pending</span></td>
+                        <td>
+                            <a href="#" class="btn btn-primary btn-sm">View</a>
+                            <a href="#" class="btn btn-success btn-sm">Approve</a>
+                            <a href="#" class="btn btn-danger btn-sm">Deny</a>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
 {% endblock %}

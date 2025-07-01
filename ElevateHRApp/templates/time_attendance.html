@@ -1,8 +1,62 @@
-{% extends "index.html" %}
+{% extends 'index.html' %}
 
 {% block content %}
 <div class="container-fluid">
     <h1 class="mt-4">Time & Attendance</h1>
-    <p>This is the Time & Attendance page.</p>
+
+    <!-- Time Clock -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Time Clock</h2>
+        </div>
+        <div class="card-body">
+            <p>Current Time: <span id="current-time" class="fw-bold"></span></p>
+            <button class="btn btn-primary">Clock In</button>
+            <button class="btn btn-danger">Clock Out</button>
+        </div>
+    </div>
+
+    <!-- Timesheet -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Timesheet</h2>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Clock In</th>
+                        <th>Clock Out</th>
+                        <th>Total Hours</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>2023-05-22</td>
+                        <td>09:00 AM</td>
+                        <td>05:00 PM</td>
+                        <td>8</td>
+                    </tr>
+                    <tr>
+                        <td>2023-05-21</td>
+                        <td>09:05 AM</td>
+                        <td>05:02 PM</td>
+                        <td>7.95</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
 </div>
+
+<script>
+    function updateTime() {
+        const now = new Date();
+        document.getElementById('current-time').textContent = now.toLocaleTimeString();
+    }
+
+    setInterval(updateTime, 1000);
+    updateTime();
+</script>
 {% endblock %}

@@ -14,6 +14,15 @@
             box-sizing: border-box;
         }
 
+        .sr-only {
+            position: absolute;
+            left: -10000px;
+            top: auto;
+            width: 1px;
+            height: 1px;
+            overflow: hidden;
+        }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f7fa;
@@ -557,7 +566,7 @@
                         <i class="fas fa-plus"></i>
                         Add Employee
                     </button>
-                </div>
+                        <label for="departmentFilter" class="sr-only">Filter by Department</label>
 
                 <!-- Search and Filter -->
                 <div class="search-filter-section">
@@ -566,6 +575,7 @@
                             <i class="fas fa-search search-icon"></i>
                             <input type="text" class="search-input" placeholder="Search employees by name, email, or position..." id="searchInput" onkeyup="filterEmployees()">
                         </div>
+                        <label for="departmentFilter" class="sr-only">Filter by Department</label>
                         <select class="filter-dropdown" id="departmentFilter" onchange="filterEmployees()">
                             <option value="all">All Departments</option>
                             <option value="Engineering">Engineering</option>
@@ -574,6 +584,7 @@
                             <option value="Finance">Finance</option>
                             <option value="Sales">Sales</option>
                         </select>
+                        <label for="statusFilter" class="sr-only">Filter by Status</label>
                         <select class="filter-dropdown" id="statusFilter" onchange="filterEmployees()">
                             <option value="all">All Status</option>
                             <option value="Active">Active</option>

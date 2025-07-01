@@ -1,8 +1,31 @@
-{% extends "index.html" %}
+{% extends 'index.html' %}
 
 {% block content %}
 <div class="container-fluid">
     <h1 class="mt-4">Reporting & Analytics</h1>
-    <p>This is the Reporting & Analytics page.</p>
+
+    <!-- Reports -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Reports</h2>
+        </div>
+        <div class="card-body">
+            <div class="list-group">
+                <a href="#" class="list-group-item list-group-item-action">Employee Turnover Report</a>
+                <a href="#" class="list-group-item list-group-item-action">Salary Report</a>
+                <a href="#" class="list-group-item list-group-item-action">Recruitment Funnel Report</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Analytics -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h2>Analytics</h2>
+        </div>
+        <div class="card-body">
+            <p>Analytics dashboard coming soon!</p>
+        </div>
+    </div>
 </div>
 {% endblock %}
