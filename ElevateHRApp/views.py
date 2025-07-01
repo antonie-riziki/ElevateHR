@@ -25,6 +25,8 @@ airtime = africastalking.Airtime
 voice = africastalking.Voice
 
 otp_storage = {}
+
+
 # Custom modules
 
 def generate_otp(length=6):
