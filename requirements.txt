@@ -6,6 +6,10 @@ sqlparse==0.5.3
 google-generativeai
 africastalking
 python-dotenv
-secrets
-strings
-
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+chromadb
+faiss-cpu
+pypdf

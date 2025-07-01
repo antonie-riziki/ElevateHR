@@ -1,6 +1,7 @@
 
 import africastalking
 import os
+import sys
 import secrets
 import string
 import json
@@ -9,12 +10,14 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 
 load_dotenv()
-
+sys.path.insert(1, './ElevateHRApp')
 
 from django.shortcuts import render, redirect
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
+
+from rag_model import get_qa_chain, query_system
 
 # Initialize Africa's Talking and Google Generative AI
 genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
@@ -101,6 +104,7 @@ def get_gemini_response(prompt):
         - Don't make assumptions about the user's knowledge or experience level.
         - Don't provide legal or financial advice.
         - Don't engage in casual conversation unrelated to HR, Employee, Managerial, Employer or Work Environment topics.
+        
         """
 
     )
@@ -194,6 +198,9 @@ def employees(request):
 
 def recruitment(request):
     return render(request, 'recruitment.html')
+
+def performance(request):
+    return render(request, 'performance.html')
 
 
 
