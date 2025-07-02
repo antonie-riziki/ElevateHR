@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ElevateHRApp',
+    'USSD',
 ]
 
 MIDDLEWARE = [
@@ -54,7 +55,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'ElevateHR.urls'
 
 TEMPLATES = [
-    {
+        {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [r'ElevateHR/ElevateHR/ElevateHRApp/templates'],
         'APP_DIRS': True,
