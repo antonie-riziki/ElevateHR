@@ -14,9 +14,15 @@ urlpatterns = [
     path('login/', views.login, name='login'),
     path('employees/', views.employees, name='employees'),
     path('recruitment/', views.recruitment, name='recruitment'),
+<<<<<<< HEAD
     path('performance-management/', views.performance_management, name='performance-management'),
     path('job-posting/', views.job_posting, name='job-posting'),
     path('time-attendance/', views.time_attendance, name='time-attendance'),
     path('leave-management/', views.leave_management, name='leave-management'),
     path('reporting-analytics/', views.reporting_analytics, name='reporting-analytics')
+=======
+    path('chatbot-response/', views.chatbot_response, name='chatbot_response'),
+    path('performance/', views.performance, name='performance'),
+    path('process-candidates/', views.process_candidates, name='process_candidates'),
+>>>>>>> 939e76b7860aa5ea69f67938065578a490b494aa
 ]

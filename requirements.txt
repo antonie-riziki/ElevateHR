@@ -10,5 +10,18 @@ python-dotenv==1.1.1
 requests==2.32.4
 schema==0.7.7
 sqlparse==0.5.3
+<<<<<<< HEAD
 tzdata==2025.2
 urllib3==2.5.0
+=======
+google-generativeai
+africastalking
+python-dotenv
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+chromadb
+faiss-cpu
+pypdf
+>>>>>>> 939e76b7860aa5ea69f67938065578a490b494aa
