@@ -229,10 +229,6 @@ def employees(request):
 def recruitment(request):
     return render(request, 'recruitment.html')
 
-<<<<<<< HEAD
-def performance_management(request):
-    return render(request, 'performance_management.html')
-
 def job_posting(request):
     return render(request, 'job_posting.html')
 
@@ -245,12 +241,8 @@ def leave_management(request):
 def reporting_analytics(request):
     return render(request, 'reporting_analytics.html')
 
-
-
-=======
 def performance(request):
     return render(request, 'performance.html')
->>>>>>> 939e76b7860aa5ea69f67938065578a490b494aa
 
 
 
