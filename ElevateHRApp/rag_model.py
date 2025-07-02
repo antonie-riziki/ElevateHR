@@ -140,7 +140,7 @@ def query_system(query: str, qa_chain):
     result = qa_chain({"query": query})
     if not result["result"] or "don't know" in result["result"].lower():
       return "The answer could not be found in the provided documents"
-    return f"ElevateHRBot 👩‍💼: \n{result['result']}" #\nSources: {[s.metadata['source'] for s in result['source_documents']]}"
+    return f"ElevateHR Agent 👩‍💼: \n{result['result']}" #\nSources: {[s.metadata['source'] for s in result['source_documents']]}"
   except Exception as e:
     return f"Error processing query: {e}"
 
