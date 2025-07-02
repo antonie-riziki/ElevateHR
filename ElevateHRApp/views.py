@@ -244,6 +244,9 @@ def reporting_analytics(request):
 def performance(request):
     return render(request, 'performance.html')
 
+def performance_management(request):
+    return render(request, 'performance.html')
+
 
 
 
