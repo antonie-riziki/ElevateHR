@@ -1,12 +1,10 @@
 <!DOCTYPE html>
-
 {% load static %}
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Performance Management - HR System</title>
+    <title>Reporting & Analytics - HR System</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -527,6 +525,67 @@
         .status-average { background: #fff3cd; color: #856404; }
         .status-poor { background: #f8d7da; color: #721c24; }
 
+        /* Add chat styles */
+        .chat-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            padding: 25px;
+            margin-bottom: 30px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .chat-messages {
+            max-height: 220px;
+            overflow-y: auto;
+            margin-bottom: 15px;
+        }
+        .chat-message {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: flex-end;
+        }
+        .chat-message.user {
+            justify-content: flex-end;
+        }
+        .chat-bubble {
+            padding: 12px 18px;
+            border-radius: 18px;
+            background: #f1f3fa;
+            color: #2c3e50;
+            max-width: 70%;
+            font-size: 15px;
+        }
+        .chat-message.user .chat-bubble {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+        }
+        .chat-input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 1.5px solid #e9ecef;
+            font-size: 15px;
+        }
+        .chat-send-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .chat-send-btn:hover {
+            background: #667eea;
+        }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .sidebar {
@@ -571,7 +630,7 @@
         <div class="main-content">
             <!-- Header -->
             <header class="header">
-                <h1 class="header-title">Performance Management</h1>
+                <h1 class="header-title">Reporting & Analytics</h1>
                 <div class="user-profile">
                     <span>Welcome, Admin</span>
                     <div class="profile-img">
@@ -586,12 +645,29 @@
                 <div class="filters-section">
                     <h2 class="section-title">
                         <i class="fas fa-filter"></i>
-                        Filters & Controls
+                        Generate HR Reports
                     </h2>
                     <div class="filter-grid">
                         <div class="filter-group">
+                            <label class="filter-label">Report Type</label>
+                            <select class="filter-select" id="reportTypeSelect">
+                                <option>Employee Turnover Report</option>
+                                <option>Salary Report</option>
+                                <option>Recruitment Funnel Report</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Period</label>
+                            <select class="filter-select" id="reportPeriodSelect">
+                                <option>This Year</option>
+                                <option>Last Year</option>
+                                <option>This Quarter</option>
+                                <option>Last Quarter</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
                             <label class="filter-label">Department</label>
-                            <select class="filter-select">
+                            <select class="filter-select" id="reportDeptSelect">
                                 <option>All Departments</option>
                                 <option>Engineering</option>
                                 <option>Marketing</option>
@@ -601,28 +677,9 @@
                             </select>
                         </div>
                         <div class="filter-group">
-                            <label class="filter-label">Role</label>
-                            <select class="filter-select">
-                                <option>All Roles</option>
-                                <option>Manager</option>
-                                <option>Senior</option>
-                                <option>Junior</option>
-                                <option>Intern</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <label class="filter-label">Period</label>
-                            <select class="filter-select">
-                                <option>This Quarter</option>
-                                <option>Last Quarter</option>
-                                <option>This Year</option>
-                                <option>Last Year</option>
-                            </select>
-                        </div>
-                        <div class="filter-group">
-                            <button class="filter-btn">
-                                <i class="fas fa-search"></i>
-                                Apply Filters
+                            <button class="filter-btn" id="generateReportBtn">
+                                <i class="fas fa-file-alt"></i>
+                                Generate Report
                             </button>
                         </div>
                     </div>
@@ -632,246 +689,123 @@
                 <div class="kpi-grid">
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span class="kpi-title">Average Performance</span>
-                            <div class="kpi-icon bg-blue">
-                                <i class="fas fa-chart-line"></i>
+                            <span class="kpi-title">Turnover Rate</span>
+                            <div class="kpi-icon bg-red">
+                                <i class="fas fa-user-minus"></i>
                             </div>
                         </div>
-                        <div class="kpi-number">8.4/10</div>
+                        <div class="kpi-number">8.2%</div>
                         <div class="kpi-change">
-                            <i class="fas fa-arrow-up"></i> +0.5 from last quarter
+                            <i class="fas fa-arrow-down"></i> -1.1% from last year
                         </div>
                     </div>
-
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span class="kpi-title">Goals Achieved</span>
+                            <span class="kpi-title">Avg. Salary</span>
                             <div class="kpi-icon bg-green">
-                                <i class="fas fa-target"></i>
+                                <i class="fas fa-dollar-sign"></i>
                             </div>
                         </div>
-                        <div class="kpi-number">85%</div>
+                        <div class="kpi-number">$68,500</div>
                         <div class="kpi-change">
-                            <i class="fas fa-arrow-up"></i> +12% from last quarter
+                            <i class="fas fa-arrow-up"></i> +3.2% from last year
                         </div>
                     </div>
-
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span class="kpi-title">Employee Satisfaction</span>
-                            <div class="kpi-icon bg-orange">
-                                <i class="fas fa-smile"></i>
+                            <span class="kpi-title">Avg. Time to Hire</span>
+                            <div class="kpi-icon bg-blue">
+                                <i class="fas fa-stopwatch"></i>
                             </div>
                         </div>
-                        <div class="kpi-number">92%</div>
+                        <div class="kpi-number">27 days</div>
                         <div class="kpi-change">
-                            <i class="fas fa-arrow-up"></i> +3% from last quarter
+                            <i class="fas fa-arrow-down"></i> -2 days from last quarter
                         </div>
                     </div>
-
                     <div class="kpi-card">
                         <div class="kpi-header">
-                            <span class="kpi-title">Performance Reviews</span>
+                            <span class="kpi-title">Open Positions</span>
                             <div class="kpi-icon bg-purple">
-                                <i class="fas fa-clipboard-check"></i>
+                                <i class="fas fa-briefcase"></i>
                             </div>
                         </div>
-                        <div class="kpi-number">247</div>
+                        <div class="kpi-number">14</div>
                         <div class="kpi-change">
-                            <i class="fas fa-arrow-up"></i> +15 completed this month
+                            <i class="fas fa-arrow-up"></i> +3 this month
                         </div>
+                    </div>
+                </div>
+
+                <!-- Chat UI for Analytics Discussion -->
+                <div class="chat-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-comments"></i>
+                        Analytics Discussion
+                    </h3>
+                    <div class="chat-messages" id="chatMessages">
+                        <div class="chat-message">
+                            <div class="chat-bubble">Welcome to the HR Analytics chat! Ask questions or discuss reports here.</div>
+                        </div>
+                    </div>
+                    <div class="chat-input-row">
+                        <input type="text" class="chat-input" id="chatInput" placeholder="Type your message...">
+                        <button class="chat-send-btn" id="chatSendBtn"><i class="fas fa-paper-plane"></i></button>
                     </div>
                 </div>
 
                 <!-- Charts Grid -->
                 <div class="charts-grid">
-                    <!-- Performance Trends Chart -->
+                    <!-- Employee Turnover Chart -->
                     <div class="chart-container">
                         <h3 class="section-title">
-                            <i class="fas fa-chart-line"></i>
-                            Performance Trends
+                            <i class="fas fa-user-minus"></i>
+                            Employee Turnover Trends
                         </h3>
-                        <canvas id="performanceChart" height="200"></canvas>
+                        <canvas id="turnoverChart" height="200"></canvas>
                     </div>
-
-                    <!-- Department Performance Chart -->
+                    <!-- Salary Distribution Chart -->
                     <div class="chart-container">
                         <h3 class="section-title">
-                            <i class="fas fa-chart-pie"></i>
-                            Department Performance
+                            <i class="fas fa-dollar-sign"></i>
+                            Salary Distribution
                         </h3>
-                        <canvas id="departmentChart" height="200"></canvas>
+                        <canvas id="salaryChart" height="200"></canvas>
                     </div>
                 </div>
 
-                <!-- Employee Performance Table -->
-                <div class="employee-table">
-                    <div class="table-header">
-                        <h3 class="section-title" style="color: white; margin: 0;">
-                            <i class="fas fa-users"></i>
-                            Individual Employee Performance Reports
-                        </h3>
-                    </div>
-                    <div class="table-content">
-                        <table>
-                            <thead>
-                                <tr>
-                                    <th>Employee</th>
-                                    <th>Department</th>
-                                    <th>Performance Score</th>
-                                    <th>Goals Completed</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>
-                                        <div class="employee-info">
-                                            <div class="employee-avatar">JS</div>
-                                            <div class="employee-details">
-                                                <h4>John Smith</h4>
-                                                <p>Senior Developer</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Engineering</td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <span>9.2/10</span>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill progress-green" style="width: 92%"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>8/10</td>
-                                    <td><span class="status-badge status-excellent">Excellent</span></td>
-                                    <td>
-                                        <button class="action-btn">View Report</button>
-                                        <button class="action-btn">Feedback</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="employee-info">
-                                            <div class="employee-avatar">EM</div>
-                                            <div class="employee-details">
-                                                <h4>Emma Wilson</h4>
-                                                <p>Marketing Manager</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Marketing</td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <span>8.7/10</span>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill progress-blue" style="width: 87%"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>9/10</td>
-                                    <td><span class="status-badge status-good">Good</span></td>
-                                    <td>
-                                        <button class="action-btn">View Report</button>
-                                        <button class="action-btn">Feedback</button>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>
-                                        <div class="employee-info">
-                                            <div class="employee-avatar">RJ</div>
-                                            <div class="employee-details">
-                                                <h4>Robert Johnson</h4>
-                                                <p>Sales Representative</p>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>Sales</td>
-                                    <td>
-                                        <div style="display: flex; align-items: center; gap: 10px;">
-                                            <span>7.8/10</span>
-                                            <div class="progress-bar">
-                                                <div class="progress-fill progress-orange" style="width: 78%"></div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>6/10</td>
-                                    <td><span class="status-badge status-average">Average</span></td>
-                                    <td>
-                                        <button class="action-btn">View Report</button>
-                                        <button class="action-btn">Feedback</button>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Goals Section -->
+                <!-- Recruitment Funnel Chart -->
                 <div class="chart-container">
                     <h3 class="section-title">
-                        <i class="fas fa-bullseye"></i>
-                        Goal Setting & Progress Tracking
+                        <i class="fas fa-filter"></i>
+                        Recruitment Funnel
                     </h3>
-                    <div class="goals-section">
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4 class="goal-title">Q4 Revenue Target</h4>
-                                <p class="goal-description">Achieve $2M in quarterly revenue</p>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-text">
-                                    <span>Progress</span>
-                                    <span>85%</span>
-                                </div>
-                                <div class="goal-progress-bar">
-                                    <div class="progress-fill progress-green" style="width: 85%"></div>
-                                </div>
-                            </div>
-                        </div>
+                    <canvas id="recruitmentChart" height="100"></canvas>
+                </div>
 
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4 class="goal-title">Team Development</h4>
-                                <p class="goal-description">Complete leadership training for 50 managers</p>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-text">
-                                    <span>Progress</span>
-                                    <span>72%</span>
-                                </div>
-                                <div class="goal-progress-bar">
-                                    <div class="progress-fill progress-blue" style="width: 72%"></div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="goal-item">
-                            <div class="goal-header">
-                                <h4 class="goal-title">Customer Satisfaction</h4>
-                                <p class="goal-description">Maintain 95% customer satisfaction rate</p>
-                            </div>
-                            <div class="goal-progress">
-                                <div class="goal-progress-text">
-                                    <span>Progress</span>
-                                    <span>93%</span>
-                                </div>
-                                <div class="goal-progress-bar">
-                                    <div class="progress-fill progress-orange" style="width: 93%"></div>
-                                </div>
+                <!-- Report Table -->
+                <div class="employee-table" id="reportTableContainer">
+                    <div class="table-header">
+                        <h3 class="section-title" style="color: white; margin: 0;">
+                            <i class="fas fa-file-alt"></i>
+                            Report Preview
+                        </h3>
+                    </div>
+                    <div class="table-content" id="reportTableContent">
+                        <div style="text-align:center; padding:40px;">
+                            <i class="fas fa-file-pdf" style="font-size:48px; color:#e74c3c; margin-bottom:16px;"></i>
+                            <h2 style="margin-bottom:12px;">PDF Report Overview</h2>
+                            <p style="color:#7f8c8d; margin-bottom:24px;">
+                                Download a comprehensive PDF version of your selected HR report for sharing or offline analysis.
+                            </p>
+                            <a href="{% static 'pdf/sample_hr_report.pdf' %}" target="_blank" class="filter-btn" style="text-decoration:none; display:inline-block;">
+                                <i class="fas fa-download"></i> Download PDF Report
+                            </a>
+                            <div style="margin-top:30px;">
+                                <img src="{% static 'img/pdf_report_preview.png' %}" alt="PDF Report Preview" style="max-width:350px; border-radius:10px; box-shadow:0 2px 10px rgba(0,0,0,0.08);">
                             </div>
                         </div>
                     </div>
-                </div>
-
-                <!-- Goal Achievement Chart -->
-                <div class="chart-container" style="margin-top: 20px;">
-                    <h3 class="section-title">
-                        <i class="fas fa-chart-bar"></i>
-                        Goal Achievement Trends
-                    </h3>
-                    <canvas id="goalChart" height="100"></canvas>
                 </div>
             </div>
         </div>
@@ -883,17 +817,17 @@
             sidebar.classList.toggle('collapsed');
         }
 
-        // Performance Trends Chart
-        const performanceCtx = document.getElementById('performanceChart').getContext('2d');
-        new Chart(performanceCtx, {
+        // Employee Turnover Chart
+        const turnoverCtx = document.getElementById('turnoverChart').getContext('2d');
+        new Chart(turnoverCtx, {
             type: 'line',
             data: {
                 labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
                 datasets: [{
-                    label: 'Average Performance Score',
-                    data: [7.5, 7.8, 8.1, 8.3, 8.2, 8.4],
-                    borderColor: '#667eea',
-                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    label: 'Turnover Rate (%)',
+                    data: [9.1, 8.7, 8.5, 8.3, 8.4, 8.2],
+                    borderColor: '#e74c3c',
+                    backgroundColor: 'rgba(231, 76, 60, 0.1)',
                     tension: 0.4,
                     fill: true
                 }]
@@ -905,26 +839,25 @@
                 scales: {
                     y: {
                         beginAtZero: true,
-                        max: 10
+                        max: 15
                     }
                 }
             }
         });
 
-        // Department Performance Chart
-        const departmentCtx = document.getElementById('departmentChart').getContext('2d');
-        new Chart(departmentCtx, {
+        // Salary Distribution Chart
+        const salaryCtx = document.getElementById('salaryChart').getContext('2d');
+        new Chart(salaryCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'],
+                labels: ['< $50k', '$50k-$70k', '$70k-$90k', '$90k+'],
                 datasets: [{
-                    data: [35, 25, 20, 12, 8],
+                    data: [20, 40, 25, 15],
                     backgroundColor: [
-                        '#667eea',
-                        '#3498db',
                         '#27ae60',
+                        '#3498db',
                         '#f39c12',
-                        '#e74c3c'
+                        '#9b59b6'
                     ]
                 }]
             },
@@ -934,20 +867,15 @@
             }
         });
 
-        // Goal Achievement Chart
-        const goalCtx = document.getElementById('goalChart').getContext('2d');
-        new Chart(goalCtx, {
+        // Recruitment Funnel Chart
+        const recruitmentCtx = document.getElementById('recruitmentChart').getContext('2d');
+        new Chart(recruitmentCtx, {
             type: 'bar',
             data: {
-                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                labels: ['Applicants', 'Screened', 'Interviewed', 'Offered', 'Hired'],
                 datasets: [{
-                    label: 'Goals Achieved (%)',
-                    data: [78, 82, 85, 88],
-                    backgroundColor: '#27ae60',
-                    borderRadius: 8
-                }, {
-                    label: 'Goals Set',
-                    data: [120, 135, 140, 150],
+                    label: 'Candidates',
+                    data: [320, 180, 90, 30, 14],
                     backgroundColor: '#667eea',
                     borderRadius: 8
                 }]
@@ -964,6 +892,108 @@
             }
         });
 
+        // Report Table Generation
+        document.getElementById('generateReportBtn').addEventListener('click', function () {
+            const type = document.getElementById('reportTypeSelect').value;
+            const period = document.getElementById('reportPeriodSelect').value;
+            const dept = document.getElementById('reportDeptSelect').value;
+            const tableContent = document.getElementById('reportTableContent');
+            let html = '';
+
+            if (type === 'Employee Turnover Report') {
+                html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Employees Start</th>
+                                <th>Employees End</th>
+                                <th>Turnover Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Engineering</td><td>52</td><td>48</td><td>7.7%</td></tr>
+                            <tr><td>Marketing</td><td>28</td><td>27</td><td>3.6%</td></tr>
+                            <tr><td>Sales</td><td>34</td><td>31</td><td>8.8%</td></tr>
+                            <tr><td>HR</td><td>12</td><td>12</td><td>0.0%</td></tr>
+                            <tr><td>Finance</td><td>10</td><td>9</td><td>10.0%</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else if (type === 'Salary Report') {
+                html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Department</th>
+                                <th>Avg. Salary</th>
+                                <th>Min Salary</th>
+                                <th>Max Salary</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Engineering</td><td>$82,000</td><td>$60,000</td><td>$120,000</td></tr>
+                            <tr><td>Marketing</td><td>$65,000</td><td>$48,000</td><td>$90,000</td></tr>
+                            <tr><td>Sales</td><td>$58,000</td><td>$40,000</td><td>$85,000</td></tr>
+                            <tr><td>HR</td><td>$54,000</td><td>$38,000</td><td>$75,000</td></tr>
+                            <tr><td>Finance</td><td>$70,000</td><td>$55,000</td><td>$100,000</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else if (type === 'Recruitment Funnel Report') {
+                html = `
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Stage</th>
+                                <th>Candidates</th>
+                                <th>Conversion Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr><td>Applicants</td><td>320</td><td>-</td></tr>
+                            <tr><td>Screened</td><td>180</td><td>56%</td></tr>
+                            <tr><td>Interviewed</td><td>90</td><td>50%</td></tr>
+                            <tr><td>Offered</td><td>30</td><td>33%</td></tr>
+                            <tr><td>Hired</td><td>14</td><td>47%</td></tr>
+                        </tbody>
+                    </table>
+                `;
+            } else {
+                html = `<p>No report data available.</p>`;
+            }
+            tableContent.innerHTML = html;
+        });
+
+        // Simple Chat UI Logic
+        document.getElementById('chatSendBtn').addEventListener('click', sendChatMessage);
+        document.getElementById('chatInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        });
+
+        function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const msg = input.value.trim();
+            if (!msg) return;
+            const chatMessages = document.getElementById('chatMessages');
+            // User message
+            const userMsg = document.createElement('div');
+            userMsg.className = 'chat-message user';
+            userMsg.innerHTML = `<div class="chat-bubble">${msg}</div>`;
+            chatMessages.appendChild(userMsg);
+            input.value = '';
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Simulated AI reply
+            setTimeout(() => {
+                const aiMsg = document.createElement('div');
+                aiMsg.className = 'chat-message';
+                aiMsg.innerHTML = `<div class="chat-bubble">Thanks for your message! (This is a demo chat. You can discuss analytics, ask for insights, or request custom reports.)</div>`;
+                chatMessages.appendChild(aiMsg);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }, 800);
+        }
+
         // Mobile menu toggle
         function toggleMobileMenu() {
             const sidebar = document.getElementById('sidebar');
@@ -974,7 +1004,6 @@
         document.addEventListener('click', function(event) {
             const sidebar = document.getElementById('sidebar');
             const isClickInsideSidebar = sidebar.contains(event.target);
-            
             if (!isClickInsideSidebar && window.innerWidth <= 768) {
                 sidebar.classList.remove('active');
             }
