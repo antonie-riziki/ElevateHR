@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+
+{% load static %}
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Management - HR System</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 5px 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            width: 24px;
+            font-size: 18px;
+            margin-right: 15px;
+            text-align: center;
+        }
+
+        .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 15px 0;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .content-area {
+            padding: 30px;
+            flex: 1;
+        }
+
+        /* Filters Section */
+        .filters-section {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .filters-section:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filter-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .filter-label {
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .filter-select {
+            padding: 12px 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .filter-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            align-self: end;
+        }
+
+        .filter-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        /* KPI Overview */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .kpi-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .kpi-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
+        .kpi-title {
+            color: #7f8c8d;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+
+        .kpi-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+        }
+
+        .kpi-number {
+            font-size: 32px;
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .kpi-change {
+            font-size: 12px;
+            color: #27ae60;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        /* Chart Container */
+        .chart-container {
+            background: white;
+            padding: 25px;
+            padding-bottom: -10px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            margin-bottom: 30px;
+            width: 100%;
+            /* max-width: 600px; */
+            height: 400px;
+            margin: auto;
+            overflow-x: auto;
+            /* transition: transform 0.3s ease, box-shadow 0.3s ease; */
+        }
+
+        .chart-container:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        /* Employee Table */
+        .employee-table {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            overflow: hidden;
+            margin-bottom: 30px;
+        }
+
+        .table-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 25px;
+        }
+
+        .table-content {
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 15px 20px;
+            text-align: left;
+            border-bottom: 1px solid #ecf0f1;
+        }
+
+        th {
+            background: #f8f9fa;
+            font-weight: 600;
+            color: #2c3e50;
+            text-transform: uppercase;
+            font-size: 12px;
+        }
+
+        tr:hover {
+            background: #f8f9fa;
+        }
+
+        .employee-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .employee-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .employee-details h4 {
+            margin: 0;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .employee-details p {
+            margin: 0;
+            font-size: 12px;
+            color: #7f8c8d;
+        }
+
+        .progress-bar {
+            width: 60px;
+            height: 6px;
+            background: #ecf0f1;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .action-btn {
+            background: none;
+            border: none;
+            color: #667eea;
+            cursor: pointer;
+            font-weight: 500;
+            margin-right: 10px;
+            transition: color 0.3s ease;
+        }
+
+        .action-btn:hover {
+            color: #764ba2;
+        }
+
+        /* Goal Tracking */
+        .goals-section {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .goal-item {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid #667eea;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease;
+        }
+
+        .goal-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .goal-header {
+            margin-bottom: 10px;
+        }
+
+        .goal-title {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+
+        .goal-description {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .goal-progress {
+            margin-top: 15px;
+        }
+
+        .goal-progress-text {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .goal-progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #ecf0f1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        /* Color variants */
+        .bg-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .bg-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+        .bg-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+        .bg-red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .bg-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .bg-teal { background: linear-gradient(135deg, #1abc9c, #16a085); }
+
+        .progress-blue { background: #3498db; }
+        .progress-green { background: #27ae60; }
+        .progress-orange { background: #f39c12; }
+        .progress-purple { background: #9b59b6; }
+
+        .status-excellent { background: #d4edda; color: #155724; }
+        .status-good { background: #cce7ff; color: #004085; }
+        .status-average { background: #fff3cd; color: #856404; }
+        .status-poor { background: #f8d7da; color: #721c24; }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .sidebar {
+                position: fixed;
+                left: -280px;
+                height: 100vh;
+                z-index: 1000;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .main-content {
+                margin-left: 0;
+            }
+
+            .kpi-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .goals-section {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        {% include 'sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <h1 class="header-title">Time Management</h1>
+                <div class="user-profile">
+                    <span>Welcome, Admin</span>
+                    <div class="profile-img">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Content Area -->
+            <div class="content-area">
+                <!-- Filters Section -->
+                <div class="filters-section">
+                    <h2 class="section-title">
+                        <i class="fas fa-filter"></i>
+                        Filters & Controls
+                    </h2>
+                    <div class="filter-grid">
+                        <div class="filter-group">
+                            <label class="filter-label">Department</label>
+                            <select class="filter-select">
+                                <option>All Departments</option>
+                                <option>Engineering</option>
+                                <option>Marketing</option>
+                                <option>Sales</option>
+                                <option>HR</option>
+                                <option>Finance</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Role</label>
+                            <select class="filter-select">
+                                <option>All Roles</option>
+                                <option>Manager</option>
+                                <option>Senior</option>
+                                <option>Junior</option>
+                                <option>Intern</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Period</label>
+                            <select class="filter-select">
+                                <option>This Month</option>
+                                <option>Last Month</option>
+                                <option>This Year</option>
+                                <option>Last Year</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <button class="filter-btn">
+                                <i class="fas fa-search"></i>
+                                Apply Filters
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI Overview -->
+                <div class="kpi-grid">
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Average Hours Worked</span>
+                            <div class="kpi-icon bg-blue">
+                                <i class="fas fa-clock"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-number">7.8 hrs/day</div>
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> +0.2 from last month
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">On-Time Attendance</span>
+                            <div class="kpi-icon bg-green">
+                                <i class="fas fa-calendar-check"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-number">94%</div>
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> +4% from last month
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Absenteeism Rate</span>
+                            <div class="kpi-icon bg-orange">
+                                <i class="fas fa-user-times"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-number">2.1%</div>
+                        <div class="kpi-change" style="color: #e74c3c;">
+                            <i class="fas fa-arrow-down"></i> -0.5% from last month
+                        </div>
+                    </div>
+
+                    <div class="kpi-card">
+                        <div class="kpi-header">
+                            <span class="kpi-title">Overtime Hours</span>
+                            <div class="kpi-icon bg-purple">
+                                <i class="fas fa-business-time"></i>
+                            </div>
+                        </div>
+                        <div class="kpi-number">120</div>
+                        <div class="kpi-change">
+                            <i class="fas fa-arrow-up"></i> +10 this month
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Grid -->
+                <div class="charts-grid">
+                    <!-- Hours Worked Trends Chart -->
+                    <div class="chart-container">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-line"></i>
+                            Hours Worked Trends
+                        </h3>
+                        <canvas id="hoursWorkedChart" height="200"></canvas>
+                    </div>
+
+                    <!-- Attendance by Department Chart -->
+                    <div class="chart-container">
+                        <h3 class="section-title">
+                            <i class="fas fa-chart-pie"></i>
+                            Attendance by Department
+                        </h3>
+                        <canvas id="attendanceDeptChart" height="200"></canvas>
+                    </div>
+                </div>
+
+                <!-- Employee Time Table -->
+                <div class="employee-table">
+                    <div class="table-header">
+                        <h3 class="section-title" style="color: white; margin: 0;">
+                            <i class="fas fa-users"></i>
+                            Individual Employee Time Reports
+                        </h3>
+                    </div>
+                    <div class="table-content">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Employee</th>
+                                    <th>Department</th>
+                                    <th>Avg. Hours/Day</th>
+                                    <th>On-Time Days</th>
+                                    <th>Status</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>
+                                        <div class="employee-info">
+                                            <div class="employee-avatar">JS</div>
+                                            <div class="employee-details">
+                                                <h4>John Smith</h4>
+                                                <p>Senior Developer</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Engineering</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span>8.2</span>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-green" style="width: 82%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>21/22</td>
+                                    <td><span class="status-badge status-excellent">Excellent</span></td>
+                                    <td>
+                                        <button class="action-btn">View Log</button>
+                                        <button class="action-btn">Notify</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="employee-info">
+                                            <div class="employee-avatar">EM</div>
+                                            <div class="employee-details">
+                                                <h4>Emma Wilson</h4>
+                                                <p>Marketing Manager</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Marketing</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span>7.5</span>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-blue" style="width: 75%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>19/22</td>
+                                    <td><span class="status-badge status-good">Good</span></td>
+                                    <td>
+                                        <button class="action-btn">View Log</button>
+                                        <button class="action-btn">Notify</button>
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td>
+                                        <div class="employee-info">
+                                            <div class="employee-avatar">RJ</div>
+                                            <div class="employee-details">
+                                                <h4>Robert Johnson</h4>
+                                                <p>Sales Representative</p>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>Sales</td>
+                                    <td>
+                                        <div style="display: flex; align-items: center; gap: 10px;">
+                                            <span>6.9</span>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill progress-orange" style="width: 69%"></div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>15/22</td>
+                                    <td><span class="status-badge status-average">Average</span></td>
+                                    <td>
+                                        <button class="action-btn">View Log</button>
+                                        <button class="action-btn">Notify</button>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Goals Section -->
+                <div class="chart-container">
+                    <h3 class="section-title">
+                        <i class="fas fa-bullseye"></i>
+                        Time Management Goals & Progress
+                    </h3>
+                    <div class="goals-section">
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4 class="goal-title">Reduce Overtime</h4>
+                                <p class="goal-description">Keep overtime hours below 100/month</p>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-text">
+                                    <span>Progress</span>
+                                    <span>80%</span>
+                                </div>
+                                <div class="goal-progress-bar">
+                                    <div class="progress-fill progress-green" style="width: 80%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4 class="goal-title">Improve On-Time Arrival</h4>
+                                <p class="goal-description">Achieve 98% on-time attendance</p>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-text">
+                                    <span>Progress</span>
+                                    <span>94%</span>
+                                </div>
+                                <div class="goal-progress-bar">
+                                    <div class="progress-fill progress-blue" style="width: 94%"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="goal-item">
+                            <div class="goal-header">
+                                <h4 class="goal-title">Minimize Absenteeism</h4>
+                                <p class="goal-description">Keep absenteeism rate below 2%</p>
+                            </div>
+                            <div class="goal-progress">
+                                <div class="goal-progress-text">
+                                    <span>Progress</span>
+                                    <span>2.1%</span>
+                                </div>
+                                <div class="goal-progress-bar">
+                                    <div class="progress-fill progress-orange" style="width: 95%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Goal Achievement Chart -->
+                <div class="chart-container" style="margin-top: 20px;">
+                    <h3 class="section-title">
+                        <i class="fas fa-chart-bar"></i>
+                        Overtime & Attendance Trends
+                    </h3>
+                    <canvas id="overtimeChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('collapsed');
+        }
+
+        // Hours Worked Trends Chart
+        const hoursWorkedCtx = document.getElementById('hoursWorkedChart').getContext('2d');
+        new Chart(hoursWorkedCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Avg. Hours Worked',
+                    data: [7.5, 7.7, 7.8, 7.9, 7.8, 7.8],
+                    borderColor: '#667eea',
+                    backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                    tension: 0.4,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+
+        // Attendance by Department Chart
+        const attendanceDeptCtx = document.getElementById('attendanceDeptChart').getContext('2d');
+        new Chart(attendanceDeptCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Engineering', 'Marketing', 'Sales', 'HR', 'Finance'],
+                datasets: [{
+                    data: [98, 92, 88, 95, 90],
+                    backgroundColor: [
+                        '#667eea',
+                        '#3498db',
+                        '#27ae60',
+                        '#f39c12',
+                        '#e74c3c'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        // Overtime & Attendance Trends Chart
+        const overtimeCtx = document.getElementById('overtimeChart').getContext('2d');
+        new Chart(overtimeCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                datasets: [{
+                    label: 'Overtime Hours',
+                    data: [110, 105, 120, 100],
+                    backgroundColor: '#27ae60',
+                    borderRadius: 8
+                }, {
+                    label: 'On-Time Attendance (%)',
+                    data: [90, 92, 94, 96],
+                    backgroundColor: '#667eea',
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: false,
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Mobile menu toggle
+        function toggleMobileMenu() {
+            const sidebar = document.getElementById('sidebar');
+            sidebar.classList.toggle('active');
+        }
+
+        // Close sidebar on mobile when clicking outside
+        document.addEventListener('click', function(event) {
+            const sidebar = document.getElementById('sidebar');
+            const isClickInsideSidebar = sidebar.contains(event.target);
+            
+            if (!isClickInsideSidebar && window.innerWidth <= 768) {
+                sidebar.classList.remove('active');
+            }
+        });
+
+        // Handle window resize
+        window.addEventListener('resize', function() {
+            const sidebar = document.getElementById('sidebar');
+            if (window.innerWidth > 768) {
+                sidebar.classList.remove('active');
+            }
+        });
+    </script>
+</body>
+</html>

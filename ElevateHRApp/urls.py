@@ -13,5 +13,13 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('login/', views.login, name='login'),
     path('employees/', views.employees, name='employees'),
-    path('recruitment/', views.recruitment, name='recruitment')
+
+    path('recruitment/', views.recruitment, name='recruitment'),
+    path('job-posting/', views.job_posting, name='job-posting'),
+    path('time-attendance/', views.time_attendance, name='time-attendance'),
+    path('leave-management/', views.leave_management, name='leave-management'),
+    path('reporting-analytics/', views.reporting_analytics, name='reporting-analytics'),
+    path('chatbot-response/', views.chatbot_response, name='chatbot_response'),
+    path('performance/', views.performance, name='performance'),
+    path('process-candidates/', views.process_candidates, name='process_candidates'),
 ]

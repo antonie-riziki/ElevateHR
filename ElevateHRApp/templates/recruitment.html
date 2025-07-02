@@ -621,6 +621,37 @@
             }
         }
 
+        .markdown-output {
+            background: #f8f8f8;
+            padding: 20px;
+            border-radius: 12px;
+            font-family: 'Segoe UI', sans-serif;
+            line-height: 1.6;
+            color: #333;
+        }
+
+        .markdown-output h1,
+        .markdown-output h2 {
+            margin-top: 1em;
+            color: #2c3e50;
+        }
+
+        .markdown-output ul,
+        .markdown-output ol {
+            padding-left: 20px;
+            margin: 1em 0;
+        }
+
+        .markdown-output strong {
+            font-weight: bold;
+        }
+
+        .markdown-output em {
+            font-style: italic;
+        }
+
+
+
         /* Color variants */
         .bg-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
         .bg-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
@@ -724,7 +755,7 @@
                         <i class="fas fa-robot"></i>
                     </div>
                     <div class="message-content">
-                        Hello! I'm your ElevateHR. I can help you with recruitment processes, candidate evaluation, and answer any HR-related questions. How can I assist you today?
+                        Hello! I'm your ElevateHR. How can I assist you today?
                     </div>
                 </div>
             </div>
@@ -737,13 +768,16 @@
                 </div>
             </div>
         </div>
-        <button class="chatbot-trigger" onclick="toggleChatbot()">
+        <button class="chatbot-trigger" type="button" title="Open Chatbot" onclick="toggleChatbot()">
             <i class="fas fa-comments"></i>
         </button>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+
     <script>
-        // Sidebar toggle
+        // File upload functionality
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             sidebar.classList.toggle('collapsed');
@@ -812,60 +846,118 @@
             button.parentElement.remove();
         }
 
-        // Process recruitment
-        function processRecruitment() {
-            const candidateInfo = document.getElementById('candidateInfo').value;
+        async function processRecruitment() {
+            const candidateInfo = document.getElementById('candidateInfo').value.trim();
             const submitBtn = document.getElementById('submitBtn');
             const resultsPlaceholder = document.getElementById('resultsPlaceholder');
             const resultsContent = document.getElementById('resultsContent');
 
-            if (!candidateInfo.trim() && uploadedFilesList.length === 0) {
+            if (!candidateInfo && uploadedFilesList.length === 0) {
                 alert('Please provide candidate information or upload documents before processing.');
                 return;
             }
 
-            // Disable submit button
+            // Disable button
             submitBtn.disabled = true;
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
 
-            // Hide placeholder and show results
-            resultsPlaceholder.style.display = 'none';
-            resultsContent.classList.add('show');
+            const formData = new FormData();
+            formData.append('prompt', candidateInfo);
+            uploadedFilesList.forEach((file, index) => {
+                formData.append(`files`, file);  // all files under same key
+            });
 
-            // Simulate processing
-            setTimeout(() => {
-                const resultId = Date.now();
-                const resultItem = document.createElement('div');
-                resultItem.className = 'result-item';
-                resultItem.innerHTML = `
-                    <div class="result-header">
-                        <div class="result-title">Application #${resultId}</div>
-                        <div class="result-status status-completed">Completed</div>
-                    </div>
-                    <div style="margin: 10px 0;">
-                        <strong>Files Processed:</strong> ${uploadedFilesList.length} files<br>
-                        <strong>Text Length:</strong> ${candidateInfo.length} characters<br>
-                        <strong>Processing Time:</strong> ${(Math.random() * 5 + 1).toFixed(1)}s
-                    </div>
-                    <div style="padding: 15px; background: #f0f4ff; border-radius: 8px; margin-top: 10px;">
-                        <strong>Analysis Summary:</strong><br>
-                        ${candidateInfo ? `Candidate information analyzed successfully. Key skills and qualifications have been extracted and matched against job requirements.` : 'Document analysis completed.'}
-                        ${uploadedFilesList.length > 0 ? ` ${uploadedFilesList.length} document(s) processed for resume parsing and skill extraction.` : ''}
+            try {
+                const response = await fetch('/process-candidates/', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                // const resultText = marked.parse(resultText);
+
+                const resultText = await response.text();
+
+                resultsPlaceholder.style.display = 'none';
+                resultsContent.classList.add('show');
+                resultsContent.innerHTML = `
+                    <div class="result-item">
+                        <div class="result-header">
+                            <div class="result-title">Top Candidates</div>
+                            <div class="result-status status-completed">Completed</div>
+                        </div>
+                        <div class="result-body markdown-output">${resultText}</div>
                     </div>
                 `;
+            } catch (err) {
+                alert('Error processing application. Please try again.');
+                console.error(err);
+            }
 
-                resultsContent.appendChild(resultItem);
-
-                // Reset form
-                document.getElementById('candidateInfo').value = '';
-                uploadedFilesList = [];
-                uploadedFiles.innerHTML = '';
-
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Process Application';
-            }, 2000);
+            // Reset UI
+            document.getElementById('candidateInfo').value = '';
+            uploadedFilesList = [];
+            uploadedFiles.innerHTML = '';
+            submitBtn.disabled = false;
+            submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Process Application';
         }
+
+
+        // Process recruitment
+        // function processRecruitment() {
+        //     const candidateInfo = document.getElementById('candidateInfo').value;
+        //     const submitBtn = document.getElementById('submitBtn');
+        //     const resultsPlaceholder = document.getElementById('resultsPlaceholder');
+        //     const resultsContent = document.getElementById('resultsContent');
+
+        //     if (!candidateInfo.trim() && uploadedFilesList.length === 0) {
+        //         alert('Please provide candidate information or upload documents before processing.');
+        //         return;
+        //     }
+
+        //     // Disable submit button
+        //     submitBtn.disabled = true;
+        //     submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Processing...';
+
+        //     // Hide placeholder and show results
+        //     resultsPlaceholder.style.display = 'none';
+        //     resultsContent.classList.add('show');
+
+        //     // Simulate processing
+        //     setTimeout(() => {
+        //         const resultId = Date.now();
+        //         const resultItem = document.createElement('div');
+        //         resultItem.className = 'result-item';
+        //         resultItem.innerHTML = `
+        //             <div class="result-header">
+        //                 <div class="result-title">Application #${resultId}</div>
+        //                 <div class="result-status status-completed">Completed</div>
+        //             </div>
+        //             <div style="margin: 10px 0;">
+        //                 <strong>Files Processed:</strong> ${uploadedFilesList.length} files<br>
+        //                 <strong>Text Length:</strong> ${candidateInfo.length} characters<br>
+        //                 <strong>Processing Time:</strong> ${(Math.random() * 5 + 1).toFixed(1)}s
+        //             </div>
+        //             <div style="padding: 15px; background: #f0f4ff; border-radius: 8px; margin-top: 10px;">
+        //                 <strong>Analysis Summary:</strong><br>
+        //                 ${candidateInfo ? `Candidate information analyzed successfully. Key skills and qualifications have been extracted and matched against job requirements.` : 'Document analysis completed.'}
+        //                 ${uploadedFilesList.length > 0 ? ` ${uploadedFilesList.length} document(s) processed for resume parsing and skill extraction.` : ''}
+        //             </div>
+        //         `;
+
+        //         resultsContent.appendChild(resultItem);
+
+        //         // Reset form
+        //         document.getElementById('candidateInfo').value = '';
+        //         uploadedFilesList = [];
+        //         uploadedFiles.innerHTML = '';
+
+        //         // Re-enable submit button
+        //         submitBtn.disabled = false;
+        //         submitBtn.innerHTML = '<i class="fas fa-paper-plane"></i> Process Application';
+        //     }, 2000);
+        // }
+
+        
 
         // Chatbot functionality
         function toggleChatbot() {
@@ -890,36 +982,64 @@
                 <div class="message-content">${message}</div>
             `;
             chatbotBody.appendChild(userMessage);
-
-            // Clear input
             chatInput.value = '';
+            chatbotBody.scrollTop = chatbotBody.scrollHeight;
 
-            // Simulate bot response
-            setTimeout(() => {
+            // Loading Indicator
+            const loadingMessage = document.createElement('div');
+            loadingMessage.className = 'chat-message bot typing';
+            loadingMessage.innerHTML = `
+                <div class="message-avatar bot-avatar">
+                    <i class="fas fa-robot"></i>
+                </div>
+                <div class="message-content">...</div>
+            `;
+            chatbotBody.appendChild(loadingMessage);
+            chatbotBody.scrollTop = chatbotBody.scrollHeight;
+
+            // Send to Django
+            fetch('/chatbot-response/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ message: message })
+            })
+            .then(response => response.json())
+            .then(data => {
+                chatbotBody.removeChild(loadingMessage);
+
                 const botMessage = document.createElement('div');
                 botMessage.className = 'chat-message';
-
-                const responses = [
-                    "I can help you with candidate screening and evaluation processes.",
-                    "For recruitment best practices, I recommend focusing on skills-based assessments.",
-                    "Would you like me to suggest interview questions for this position?",
-                    "I can help you create job descriptions and requirements.",
-                    "Let me know if you need assistance with candidate background checks."
-                ];
-
-                const randomResponse = responses[Math.floor(Math.random() * responses.length)];
-
                 botMessage.innerHTML = `
                     <div class="message-avatar bot-avatar">
                         <i class="fas fa-robot"></i>
                     </div>
-                    <div class="message-content">${randomResponse}</div>
+                    <div class="message-content">${data.response}</div>
                 `;
                 chatbotBody.appendChild(botMessage);
                 chatbotBody.scrollTop = chatbotBody.scrollHeight;
-            }, 1000);
+            })
+            .catch(error => {
+                chatbotBody.removeChild(loadingMessage);
+                console.error('Error:', error);
+            });
+        }
 
-            chatbotBody.scrollTop = chatbotBody.scrollHeight;
+        function getCookie(name) {
+            let cookieValue = null;
+            if (document.cookie && document.cookie !== '') {
+                const cookies = document.cookie.split(';');
+                for (let cookie of cookies) {
+                    const trimmed = cookie.trim();
+                    if (trimmed.substring(0, name.length + 1) === (name + '=')) {
+                        cookieValue = decodeURIComponent(trimmed.substring(name.length + 1));
+                        break;
+                    }
+                }
+            }
+            return cookieValue;
         }
 
         // Enter key support for chat

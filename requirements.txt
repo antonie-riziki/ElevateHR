@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 Package            Version
 ------------------ ---------
 africastalking     1.2.9
@@ -13,3 +14,27 @@ requests           2.32.4
 schema             0.7.7
 sqlparse           0.5.3
 urllib3            2.5.0
+=======
+africastalking==1.2.9
+asgiref==3.8.1
+certifi==2025.6.15
+charset-normalizer==3.4.2
+Django==5.2.3
+django-jazzmin==3.0.1
+idna==3.10
+pillow==11.2.1
+python-dotenv==1.1.1
+requests==2.32.4
+schema==0.7.7
+sqlparse==0.5.3
+tzdata==2025.2
+urllib3==2.5.0
+google-generativeai
+langchain
+langchain-community
+langchain-core
+langchain-google-genai
+chromadb
+faiss-cpu
+pypdf
+>>>>>>> 14d5e1b279ba17ca5ed507e1b6601b413541544a
