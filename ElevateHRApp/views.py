@@ -67,7 +67,7 @@ def welcome_message(first_name, phone_number):
     recipients = [f"+254{str(phone_number)}"]
 
     # Set your message
-    message = f"{first_name}, Welcome to ElevateHR! Your account is now active. Let’s streamline HR tasks together.";
+    message = f"{first_name}, Welcome to ElevateHR! Your account is now active. Lets streamline HR tasks together.";
 
     # Set your shortCode or senderId
     sender = 20880
@@ -180,10 +180,15 @@ def send_otp_view(request):
             'password': password,
         }
 
+        welcome_message(first_name, phone)
+
         send_otp(phone, otp_code)
+        
+        # if get_otp_code:
+        #     welcome_message(first_name, phone)
 
         return JsonResponse({'status': 'OTP sent', 'phone': phone})
-
+    
     return JsonResponse({'error': 'Invalid request'}, status=400)
 
 @csrf_exempt
