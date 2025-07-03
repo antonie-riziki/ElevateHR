@@ -1,6 +1,18 @@
 # WhatsApp HR Bot
 
-This is a simple WhatsApp HR Bot built with Python, Flask, and Twilio.
+This is a simple WhatsApp HR Bot built with Python, Flask, and Twilio that uses interactive messaging features.
+
+## What you can do
+
+- **Say hi or hello**: The bot will greet you and present a list of options:
+  - Payroll
+  - Leave Requests
+  - Company Policies
+  - Document Requests
+  - Support & Feedback
+- **Select an option**: The bot will respond with information or further interactive choices.
+  - **Leave Requests**: You'll get a button to confirm if you want the link to the company portal.
+  - **Company Policies**: You'll get buttons to choose which policy you want to know more about.
 
 ## Setup
 
