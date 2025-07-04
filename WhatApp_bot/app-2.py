@@ -118,7 +118,7 @@ def get_gemini_response(user_message, user_context=""):
     """Get response from Gemini AI with HR context."""
     try:
         prompt = f"""
-        You are an HR Assistant Bot for our company. Use the following company information to answer employee questions accurately and professionally.
+        You are anElevateHR for our company. Use the following company information to answer employee questions accurately and professionally.
 
         COMPANY HR INFORMATION:
         {HR_KNOWLEDGE_BASE}

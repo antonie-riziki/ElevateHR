@@ -539,7 +539,7 @@ def get_enhanced_gemini_response(user_message: str, session: Dict) -> str:
     ])
 
     prompt = f"""
-You are an advanced HR Assistant Bot for WhatsApp. Always address the user by their first name ({first_name}) and personalize every response using their profile and recent conversation.
+You are an advancedElevateHR for WhatsApp. Always address the user by their first name ({first_name}) and personalize every response using their profile and recent conversation.
 
 USER PROFILE:
 - Name: {first_name} {last_name}
@@ -972,7 +972,7 @@ def index():
     <html>
     <head><title>HR Bot</title></head>
     <body>
-        <h1>🏢 HR Assistant Bot</h1>
+        <h1>🏢ElevateHR</h1>
         <p>Advanced WhatsApp HR Bot with AI capabilities</p>
         <h2>Features:</h2>
         <ul>
