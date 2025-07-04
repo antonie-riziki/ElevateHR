@@ -256,7 +256,7 @@ def send_main_menu(to_number):
 
     try:
         message_body = (
-            "🏢 *HR Assistant Bot*\n\n"
+            "🏢 *ElevateHR*\n\n"
             "Hello! I'm your AI-powered HR assistant. You can:\n\n"
             "🎯 *Quick Options:*\n"
             "1️⃣ Payroll Inquiry\n"
