@@ -31,8 +31,6 @@ if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
 else:
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-# Replace the Gemini model initialization section (around line 40-55) with this:
-
 # Initialize Gemini AI
 if not GEMINI_API_KEY:
     logging.error("GOOGLE_API_KEY not set. AI features will not work.")
@@ -40,45 +38,18 @@ if not GEMINI_API_KEY:
 else:
     genai.configure(api_key=GEMINI_API_KEY)
     try:
-        # Updated model name - try these in order of preference
-        model_names = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro', 
-            'gemini-1.0-pro',
-            'gemini-pro'
-        ]
-        
-        model = None
-        for model_name in model_names:
-            try:
-                model = genai.GenerativeModel(
-                    model_name,
-                    safety_settings={
-                        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
-                        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
-                    }
-                )
-                logging.info(f"Gemini AI model '{model_name}' initialized successfully.")
-                break
-            except Exception as e:
-                logging.warning(f"Failed to initialize model '{model_name}': {e}")
-                continue
-        
-        if model is None:
-            logging.error("Failed to initialize any Gemini model. Listing available models...")
-            try:
-                available_models = genai.list_models()
-                logging.info("Available models:")
-                for m in available_models:
-                    if 'generateContent' in m.supported_generation_methods:
-                        logging.info(f"  - {m.name}")
-            except Exception as e:
-                logging.error(f"Could not list available models: {e}")
-                
+        model = genai.GenerativeModel(
+            'gemini-pro',
+            safety_settings={
+                HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_NONE,
+                HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_NONE,
+            }
+        )
+        logging.info("Gemini AI model initialized successfully.")
     except Exception as e:
-        logging.error(f"Failed to configure Gemini API: {e}")
+        logging.error(f"Failed to initialize Gemini model: {e}")
         model = None
 
 # User session storage (WARNING: NOT PRODUCTION READY - use a database like Redis/PostgreSQL for persistence)
@@ -358,7 +329,6 @@ def whatsapp_reply():
 
     # Process structured menu commands
     if incoming_msg in ['1', '2', '3', '4', '5']:
-        user_query_for_ai = ""
         if incoming_msg == '1':
             user_query_for_ai = "Tell me about payroll information, including pay date and how to access salary slips."
             update_user_session(from_number, state='payroll_inquiry', last_action='payroll_menu_selected')
@@ -377,10 +347,7 @@ def whatsapp_reply():
         
         # Get AI response for the structured query
         context = get_conversation_context(from_number)
-        if user_query_for_ai:
-            ai_response = get_gemini_response(user_query_for_ai, context)
-        else:
-            ai_response = "Sorry, I couldn't understand your menu selection. Type 'menu' to see options."
+        ai_response = get_gemini_response(user_query_for_ai, context)
         resp.message(ai_response)
         add_to_conversation_history(from_number, incoming_msg, ai_response)
         return str(resp)
