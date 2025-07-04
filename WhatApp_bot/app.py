@@ -142,7 +142,7 @@ DOCUMENT REQUESTS:
 - All documents sent to registered email
 
 CONTACT INFORMATION:
-- HR Email: hr@company.com
+- HR Email: hr@elevatehr.com
 - HR Phone: +1-555-0199
 - Emergency contact: +1-555-0911
 - Office hours: 9 AM - 5 PM, Monday-Friday
@@ -193,7 +193,7 @@ def get_gemini_response(user_message, user_context=""):
     1. Answer strictly based on the "COMPANY HR INFORMATION" provided above. Do not make up information.
     2. Be helpful, professional, and concise. Keep responses under 320 characters for optimal WhatsApp display.
     3. If the "EMPLOYEE QUESTION" is about *personal employee data* (e.g., specific salary amount, personal leave balance, individual bonus details), and an "Employee ID" is *not* present in the USER CONTEXT, you MUST politely ask the user for their Employee ID. For example: "For personal details like your salary, please provide your Employee ID. Type 'My Employee ID is [YourID]'".
-    4. If the information requested is not in the "COMPANY HR INFORMATION", politely state that you don't have that specific detail and direct them to contact HR directly at hr@company.com or call +1-555-0199.
+    4. If the information requested is not in the "COMPANY HR INFORMATION", politely state that you don't have that specific detail and direct them to contact HR directly at hr@elevatehr.com or call +1-555-0199.
     5. Avoid overly casual language or excessive emojis. Use them sparingly for readability (e.g., a checkmark for completion).
     6. Always end your response with "Type 'menu' for main options or ask me anything else!"
     7. Prioritize answering the question if the information is available, otherwise follow instruction 3 or 4.
@@ -213,7 +213,7 @@ def get_gemini_response(user_message, user_context=""):
         return "I cannot respond to that query as it violates safety guidelines. Please ask a different question. Type 'menu' for main options or ask me anything else!"
     except Exception as e:
         logging.error(f"Error getting Gemini response: {e}")
-        return "I'm having trouble processing your request right now. Please try again or contact HR directly at hr@company.com. Type 'menu' for main options or ask me anything else!"
+        return "I'm having trouble processing your request right now. Please try again or contact HR directly at hr@elevatehr.com. Type 'menu' for main options or ask me anything else!"
 
 def is_structured_command(message):
     """Check if message is a structured menu command or a greeting/menu trigger."""

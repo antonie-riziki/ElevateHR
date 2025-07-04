@@ -111,7 +111,7 @@ def whatsapp_reply():
             update_user_session(from_number, 'document_request')
             
         elif incoming_msg == '5':
-            resp.message("🎧 *Support & Feedback*\n\nPlease describe your issue or feedback below. Your message will be forwarded to the HR team confidentially.\n\n📧 You can also reach us at: hr@company.com\n📞 Phone: +1-XXX-XXX-XXXX\n\nType your message or 'menu' to return to main menu.")
+            resp.message("🎧 *Support & Feedback*\n\nPlease describe your issue or feedback below. Your message will be forwarded to the HR team confidentially.\n\n📧 You can also reach us at: hr@elevatehr.com\n📞 Phone: +1-XXX-XXX-XXXX\n\nType your message or 'menu' to return to main menu.")
             update_user_session(from_number, 'support_feedback')
             
         else:

@@ -85,7 +85,7 @@ DOCUMENT REQUESTS:
 - All documents sent to registered email
 
 CONTACT INFORMATION:
-- HR Email: hr@company.com
+- HR Email: hr@elevatehr.com
 - HR Phone: +1-555-0199
 - Emergency contact: +1-555-0911
 - Office hours: 9 AM - 5 PM, Monday-Friday
@@ -144,7 +144,7 @@ def get_gemini_response(user_message, user_context=""):
     
     except Exception as e:
         print(f"Error getting Gemini response: {e}")
-        return "I'm having trouble processing your request right now. Please try again or contact HR directly at hr@company.com"
+        return "I'm having trouble processing your request right now. Please try again or contact HR directly at hr@elevatehr.com"
 
 def is_structured_command(message):
     """Check if message is a structured menu command."""

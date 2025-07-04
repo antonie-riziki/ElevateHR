@@ -329,7 +329,7 @@ BENEFITS PACKAGE:
 - Employee Discounts: Various retail and service partners
 
 CONTACT INFORMATION:
-- HR Department: hr@company.com | +1-555-0199
+- HR Department: hr@elevatehr.com | +1-555-0199
 - Payroll Queries: payroll@company.com | +1-555-0177
 - IT Support: it@company.com | +1-555-0188
 - Emergency Line: +1-555-0911 (24/7)
@@ -525,7 +525,7 @@ class FormHandler:
 def get_enhanced_gemini_response(user_message: str, session: Dict) -> str:
     """Get enhanced, personalized response from Gemini AI with user context."""
     if model is None:
-        return "AI is temporarily unavailable. Please contact HR directly at hr@company.com"
+        return "AI is temporarily unavailable. Please contact HR directly at hr@elevatehr.com"
 
     # Build user context
     first_name = session.get('first_name', 'there')
@@ -575,7 +575,7 @@ Respond now:
             return f"Sorry {first_name}, I'm having trouble generating a response. Please try again or contact HR directly."
     except Exception as e:
         logging.error(f"Enhanced Gemini response error: {e}")
-        return f"Sorry {first_name}, I'm experiencing technical difficulties. Please try again or contact HR at hr@company.com for immediate assistance."
+        return f"Sorry {first_name}, I'm experiencing technical difficulties. Please try again or contact HR at hr@elevatehr.com for immediate assistance."
 
 # Enhanced message processing
 def process_message(phone_number: str, message: str) -> str:
@@ -680,7 +680,7 @@ def handle_menu_selection(session: Dict, selection: str) -> str:
         '1': "Here's your payroll information:\n💰 Next payday: 25th of this month\n📊 Access payslips at company-portal.com\n🏦 Direct deposit to your registered account\n\nNeed specific salary details? Please provide your Employee ID.\n\nType 'menu' for more options!",
         '2': "🏖️ **Leave Management**\n\nOptions:\n• Type 'apply for leave' to submit new request\n• Type 'leave status' to check pending requests\n• Type 'leave balance' to see remaining days\n\nLeave Types Available:\n✅ Annual (20 days)\n✅ Sick (10 days)\n✅ Maternity (16 weeks)\n✅ Paternity (4 weeks)\n\nWhat would you like to do?",
         '3': "📋 **Company Policies**\n\n🕘 Working Hours: 9 AM - 5 PM\n🏠 Remote Work: 3 days/week\n📱 Flexible Hours: 8 AM - 6 PM window\n🎯 Core Hours: 10 AM - 3 PM\n\nFor detailed policies, visit: company-portal.com\n\nType 'menu' for more options!",
-        '4': "📄 **Document Requests**\n\n📜 Available Documents:\n• Salary Certificate (2-3 days)\n• Employment Letter (2-3 days)\n• Experience Certificate (3-5 days)\n• Tax Documents (instant)\n\nTo request: Email hr@company.com with your Employee ID\n\nType 'menu' for more options!",
+        '4': "📄 **Document Requests**\n\n📜 Available Documents:\n• Salary Certificate (2-3 days)\n• Employment Letter (2-3 days)\n• Experience Certificate (3-5 days)\n• Tax Documents (instant)\n\nTo request: Email hr@elevatehr.com with your Employee ID\n\nType 'menu' for more options!",
         '5': "🎫 **Support Tickets**\n\nCreate tickets for:\n• IT Issues\n• HR Queries\n• Facility Problems\n• Benefits Questions\n\nTo create ticket: Type 'create ticket'\nTo check status: Type 'ticket status'\n\nType 'menu' for more options!",
         '6': "👥 **Employee Directory**\n\n🔍 Search by:\n• Name\n• Department\n• Position\n\nType 'search [name]' or 'search [department]'\n\nExample: 'search John' or 'search IT'\n\nType 'menu' for more options!",
         '7': f"📊 **My Dashboard**\n\n👤 Employee: {session.get('first_name', 'Not set')} {session.get('last_name', '')}\n🆔 ID: {session.get('employee_id', 'Not provided')}\n🏢 Department: {session.get('department', 'Not specified')}\n\n📈 Quick Stats:\n• Active since: {datetime.now().strftime('%B %Y')}\n• Last login: Today\n\nType 'menu' for more options!"
@@ -873,7 +873,7 @@ def webhook():
     except Exception as e:
         logging.error(f"Error in webhook: {e}")
         resp = MessagingResponse()
-        resp.message("🚨 I'm experiencing technical difficulties. Please try again in a moment or contact HR directly at hr@company.com")
+        resp.message("🚨 I'm experiencing technical difficulties. Please try again in a moment or contact HR directly at hr@elevatehr.com")
         return str(resp)
 
 @app.route('/admin/stats', methods=['GET'])
