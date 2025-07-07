@@ -231,6 +231,9 @@ def index(request):
 def employees(request):
     return render(request, 'employees.html')
 
+def employee_dashboard(request):
+    return render(request, 'employee-dashboard.html')
+
 def recruitment(request):
     return render(request, 'recruitment.html')
 

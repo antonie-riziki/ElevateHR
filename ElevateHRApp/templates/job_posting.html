@@ -1,8 +1,671 @@
-{% extends "index.html" %}
+<!DOCTYPE html>
 
-{% block content %}
-<div class="container-fluid">
-    <h1 class="mt-4">Job Posting</h1>
-    <p>This is the Job Posting page.</p>
-</div>
-{% endblock %}
+{% load static %}
+
+
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Job Postings - ElevateHR</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f5f7fa;
+            color: #333;
+        }
+
+        :root {
+            --primary-blue: #2563eb;
+            --secondary-blue: #3b82f6;
+            --light-blue: #dbeafe;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-600: #4b5563;
+            --gray-800: #1f2937;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+            min-width: 175vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s ease;
+            position: relative;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+        }
+
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo i {
+            font-size: 24px;
+        }
+
+        .logo-text {
+            font-size: 20px;
+            font-weight: bold;
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .logo-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .toggle-btn {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 5px;
+            transition: background 0.3s ease;
+        }
+
+        .toggle-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .nav-menu {
+            list-style: none;
+            padding: 20px 0;
+        }
+
+        .nav-item {
+            margin: 5px 0;
+        }
+
+        .nav-link {
+            display: flex;
+            align-items: center;
+            padding: 15px 20px;
+            text-decoration: none;
+            color: rgba(255,255,255,0.8);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: white;
+            background: rgba(255,255,255,0.1);
+            transform: translateX(5px);
+        }
+
+        .nav-link i {
+            width: 24px;
+            font-size: 18px;
+            margin-right: 15px;
+            text-align: center;
+        }
+
+        .nav-text {
+            transition: opacity 0.3s ease;
+        }
+
+        .sidebar.collapsed .nav-text {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar.collapsed .nav-link {
+            justify-content: center;
+            padding: 15px 0;
+        }
+
+        .sidebar.collapsed .nav-link i {
+            margin-right: 0;
+        }
+
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 28px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .profile-img {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+
+        .content-area {
+            padding: 30px;
+            flex: 1;
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            transition: margin-left 0.3s ease;
+        }
+        
+        .gradient-bg {
+            background: linear-gradient(135deg, var(--primary-blue) 0%, var(--secondary-blue) 100%);
+        }
+
+        
+        .card-hover {
+            transition: all 0.3s ease;
+        }
+        
+        .card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        }
+        
+        .share-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .share-btn:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        {% include 'sidebar.html' %}
+
+        <!-- Main Content -->
+        <div class="main-content">
+
+            <!-- Header -->
+            <header class="header">
+                <h1 class="header-title">Recruitment Campaign</h1>
+                <div class="user-profile">
+                    <span>Welcome, Employee</span>
+                    <div class="profile-img">
+                        <i class="fas fa-user"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Main Content -->
+            <div class="content-area">
+                <!-- Action Header -->
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 space-y-4 md:space-y-0">
+                    <div>
+                        <!-- <h2 class="text-3xl font-bold text-gray-800 mb-2">Recruitment Campaigns</h2> -->
+                        <p class="text-gray-600">Manage your job postings and track campaign performance</p>
+                    </div>
+                    <button class="gradient-bg text-white px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 hover:shadow-lg transition-all duration-300 transform hover:scale-105">
+                        <i class="fas fa-plus"></i>
+                        <span>Launch Campaign</span>
+                    </button>
+                </div>
+
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Active Campaigns</p>
+                                <p class="text-2xl font-bold text-gray-800">12</p>
+                            </div>
+                            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-bullhorn text-blue-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Total Applications</p>
+                                <p class="text-2xl font-bold text-gray-800">248</p>
+                            </div>
+                            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-users text-green-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Interviews Scheduled</p>
+                                <p class="text-2xl font-bold text-gray-800">42</p>
+                            </div>
+                            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-calendar-check text-yellow-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-white p-6 rounded-lg shadow-sm border border-gray-200">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Positions Filled</p>
+                                <p class="text-2xl font-bold text-gray-800">8</p>
+                            </div>
+                            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                <i class="fas fa-check-circle text-purple-600"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Job Campaigns Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <!-- Campaign Card 1 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-code text-blue-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">Senior Frontend Developer</h3>
+                                        <p class="text-sm text-gray-600">Technology Department</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">34</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Posted:</span>
+                                    <span class="font-medium text-gray-800">Dec 15, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Expires:</span>
+                                    <span class="font-medium text-gray-800">Jan 15, 2025</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Card 2 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-chart-line text-purple-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">Marketing Manager</h3>
+                                        <p class="text-sm text-gray-600">Marketing Department</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">56</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Posted:</span>
+                                    <span class="font-medium text-gray-800">Dec 12, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Expires:</span>
+                                    <span class="font-medium text-gray-800">Jan 12, 2025</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Card 3 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-user-tie text-green-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">HR Specialist</h3>
+                                        <p class="text-sm text-gray-600">Human Resources</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-yellow-100 text-yellow-800 text-xs font-medium rounded-full">Closing Soon</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">28</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Posted:</span>
+                                    <span class="font-medium text-gray-800">Nov 20, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Expires:</span>
+                                    <span class="font-medium text-red-600">Dec 25, 2024</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Card 4 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-shield-alt text-red-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">Security Analyst</h3>
+                                        <p class="text-sm text-gray-600">IT Security</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-gray-100 text-gray-800 text-xs font-medium rounded-full">Closed</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">42</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Posted:</span>
+                                    <span class="font-medium text-gray-800">Oct 15, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Closed:</span>
+                                    <span class="font-medium text-gray-800">Nov 30, 2024</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Card 5 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-palette text-orange-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">UX/UI Designer</h3>
+                                        <p class="text-sm text-gray-600">Design Department</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">67</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Posted:</span>
+                                    <span class="font-medium text-gray-800">Dec 10, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Expires:</span>
+                                    <span class="font-medium text-gray-800">Jan 10, 2025</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campaign Card 6 -->
+                    <div class="bg-white rounded-lg shadow-sm border border-gray-200 card-hover">
+                        <div class="p-6">
+                            <div class="flex items-start justify-between mb-4">
+                                <div class="flex items-center space-x-3">
+                                    <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+                                        <i class="fas fa-database text-indigo-600"></i>
+                                    </div>
+                                    <div>
+                                        <h3 class="text-lg font-semibold text-gray-800">Data Analyst</h3>
+                                        <p class="text-sm text-gray-600">Analytics Team</p>
+                                    </div>
+                                </div>
+                                <span class="px-3 py-1 bg-blue-100 text-blue-800 text-xs font-medium rounded-full">Draft</span>
+                            </div>
+                            
+                            <div class="space-y-3 mb-4">
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Applications:</span>
+                                    <span class="font-medium text-gray-800">0</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Created:</span>
+                                    <span class="font-medium text-gray-800">Dec 18, 2024</span>
+                                </div>
+                                <div class="flex justify-between text-sm">
+                                    <span class="text-gray-600">Status:</span>
+                                    <span class="font-medium text-blue-600">Ready to Publish</span>
+                                </div>
+                            </div>
+
+                            <!-- Share Buttons -->
+                            <div class="border-t pt-4">
+                                <p class="text-sm text-gray-600 mb-3">Share Campaign:</p>
+                                <div class="flex items-center space-x-3">
+                                    <button class="share-btn w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center hover:bg-blue-700" title="Share on LinkedIn">
+                                        <i class="fab fa-linkedin-in text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-sky-500 text-white rounded-full flex items-center justify-center hover:bg-sky-600" title="Share on Twitter">
+                                        <i class="fab fa-twitter text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-blue-800 text-white rounded-full flex items-center justify-center hover:bg-blue-900" title="Share on Facebook">
+                                        <i class="fab fa-facebook-f text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-gray-600 text-white rounded-full flex items-center justify-center hover:bg-gray-700" title="Share on Company Website">
+                                        <i class="fas fa-globe text-sm"></i>
+                                    </button>
+                                    <button class="share-btn w-8 h-8 bg-green-600 text-white rounded-full flex items-center justify-center hover:bg-green-700" title="Copy Link">
+                                        <i class="fas fa-link text-sm"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Add click handlers for share buttons
+        document.addEventListener('DOMContentLoaded', function() {
+            // Handle share button clicks
+            document.querySelectorAll('.share-btn').forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const title = this.getAttribute('title');
+                    
+                    if (title.includes('LinkedIn')) {
+                        window.open('https://www.linkedin.com/sharing/share-offsite/?url=' + encodeURIComponent(window.location.href), '_blank');
+                    } else if (title.includes('Twitter')) {
+                        window.open('https://twitter.com/intent/tweet?url=' + encodeURIComponent(window.location.href), '_blank');
+                    } else if (title.includes('Facebook')) {
+                        window.open('https://www.facebook.com/sharer/sharer.php?u=' + encodeURIComponent(window.location.href), '_blank');
+                    } else if (title.includes('Company Website')) {
+                        // Handle company website sharing
+                        alert('Share to company website functionality would be implemented here');
+                    } else if (title.includes('Copy Link')) {
+                        navigator.clipboard.writeText(window.location.href).then(() => {
+                            alert('Link copied to clipboard!');
+                        });
+                    }
+                });
+            });
+
+            // Handle start new campaign button
+            document.querySelector('button').addEventListener('click', function() {
+                alert('Start New Campaign functionality would be implemented here');
+            });
+        });
+    </script>
+</body>
+</html>

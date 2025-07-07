@@ -14,6 +14,8 @@ urlpatterns = [
     path('verify-otp/', views.verify_otp_view, name='verify_otp'),
     path('login/', views.login, name='login'),
     path('employees/', views.employees, name='employees'),
+    path('employee-dasboard', views.employee_dashboard, name='employee_dashboard'),
+    # path('employee/<int:employee_id>/', views.employee_detail, name='employee_detail'),
 
     path('recruitment/', views.recruitment, name='recruitment'),
     path('job-posting/', views.job_posting, name='job-posting'),
