@@ -30,6 +30,12 @@ ALLOWED_HOSTS = []
 
 # Application definition
 
+
+CSRF_TRUSTED_ORIGINS = [
+    'https://localhost:8000',
+]
+
+
 INSTALLED_APPS = [
     'jazzmin',
     'django.contrib.admin',
@@ -39,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ElevateHRApp',
-    'USSD',
 ]
 
 MIDDLEWARE = [

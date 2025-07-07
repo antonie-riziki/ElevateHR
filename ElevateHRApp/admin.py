@@ -58,3 +58,4 @@ class TrainingAdmin(admin.ModelAdmin):
     list_display = ('training_title', 'training_trainer', 'training_date')
     search_fields = ('training_title', 'training_trainer', 'training_date')
     list_filter = ('training_title', 'training_trainer', 'training_date')
+

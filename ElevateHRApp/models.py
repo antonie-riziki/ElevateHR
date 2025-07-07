@@ -183,14 +183,14 @@ class Employee(models.Model):
         return self.fname + ' ' + self.lname + ' EHR' + self.employee_ID
 
 
-class JobPosition(models.Model):
-    job_title = models.CharField(max_length=100, unique=True)
-    job_description = models.TextField()
-    job_department = models.ForeignKey(Department, on_delete=models.CASCADE)
-    job_salary_range = models.CharField(max_length=100)
+# class JobPosition(models.Model):
+#     job_title = models.CharField(max_length=100, unique=True)
+#     job_description = models.TextField()
+#     job_department = models.ForeignKey(Department, on_delete=models.CASCADE)
+#     job_salary_range = models.CharField(max_length=100)
 
-    def __str__(self):
-        return self.job_title + ' ' + self.job_department
+#     def __str__(self):
+#         return self.job_title + ' ' + self.job_department
 
 class Attendance(models.Model):
     attendance_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
@@ -256,6 +256,36 @@ class Training(models.Model):
 
     def __str__(self):
         return self.training_title + ' ' + self.training_trainer
+
+
+
+class JobPosition(models.Model):
+    JOB_TYPE_CHOICES = [
+        ('FT', 'Full-time'),
+        ('PT', 'Part-time'),
+        ('CT', 'Contract'),
+        ('IN', 'Internship'),
+        ('TP', 'Temporary'),
+        ('FR', 'Freelance'),
+    ]
+
+    job_title = models.CharField(max_length=255)
+    # company_name = models.CharField(max_length=255)
+    # company_website = models.URLField(blank=True, null=True)
+    job_department = models.ForeignKey(Department, on_delete=models.CASCADE, max_length=255)
+    job_type = models.CharField(max_length=2, choices=JOB_TYPE_CHOICES, default='FT')
+    job_salary_range = models.CharField(max_length=100, blank=True, help_text="Example: $40,000 - $60,000")
+    description = models.TextField(blank=True)
+    requirements = models.TextField(help_text="List required skills or qualifications", default=None)
+    responsibilities = models.TextField(help_text="List core job responsibilities", default=None)
+    posted_date = models.DateTimeField(default=timezone.now)
+    application_deadline = models.DateField(null=True, blank=True)
+    contact_email = models.EmailField(default='example@email.com')
+    is_remote = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def __str__(self):
+        return f"{self.job_title} at {self.job_department}"
 
 
 
