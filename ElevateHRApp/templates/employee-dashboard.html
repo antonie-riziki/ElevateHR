@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 
 {% load static %}
+{% load humanize %}
 
 <html lang="en">
 <head>
@@ -518,7 +519,9 @@
                 <!-- Employee Header -->
                 <div class="employee-header">
                     <div class="employee-profile">
-                        <div class="employee-avatar">JS</div>
+                        <div class="employee-avatar">
+                            {{ emp_dash.fname|slice:":1" }}{{ emp_dash.lname|slice:":1" }}
+                        </div>
                         <div class="employee-info">
                             <h2>{{ emp_dash.fname }} {{ emp_dash.lname }}</h2>
                             <div class="employee-meta">
@@ -534,7 +537,7 @@
                 </div>
 
                 <div class="quick-actions">
-                    <button class="btn btn-secondary" onclick="startVideoCall()">
+                    <button class="btn btn-primary" onclick="startVideoCall()">
                         🖨 Print Badge
                     </button>
                     <button class="btn btn-info" onclick="startVideoCall()">
@@ -569,7 +572,7 @@
                     <div class="metric-card">
                         <div class="metric-icon" style="background: #38b2ac;">💰</div>
                         <div class="metric-info">
-                            <h3>$8,500</h3>
+                            <h3>${{ emp_dash.salary|intcomma }}</h3>
                             <p>Monthly Salary</p>
                             <div class="metric-change positive">Next: June 30</div>
                         </div>
