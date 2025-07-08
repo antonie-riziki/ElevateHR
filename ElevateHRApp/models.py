@@ -200,7 +200,7 @@ class Attendance(models.Model):
     attendance_status = models.CharField(max_length=20, choices=[('Present', 'Present'), ('Absent', 'Absent'), ('Leave', 'Leave')])
 
     def __str__(self):
-        return self.attendance_employee + ' ' + self.attendance_status
+        return f"{self.attendance_employee} {self.attendance_status}"
 
 
 class LeaveRequest(models.Model):
@@ -232,7 +232,7 @@ class PerformanceReview(models.Model):
     performance_comments = models.TextField()
 
     def __str__(self):
-        return self.performance_employee + ' ' + self.performance_reviewer
+        return f"{self.performance_employee} {self.performance_reviewer}"
 
 
 class Payroll(models.Model):
@@ -244,7 +244,7 @@ class Payroll(models.Model):
     payroll_paid_status = models.BooleanField(default=False)
 
     def __str__(self):
-        return self.payroll_employee + ' ' + self.payroll_date + ' ' + self.payroll_paid_status
+        return f"{self.payroll_employee} {self.payroll_date} {self.payroll_paid_status}"
 
 
 class Training(models.Model):
