@@ -17,11 +17,11 @@ class DepartmentAdmin(admin.ModelAdmin):
     list_filter = ('dpt_name', 'code', 'email')
 
 
-# @admin.register(JobPosting)
-# class JobPostingAdmin(admin.ModelAdmin):
-#     list_display = ('job_title', 'job_department', 'job_salary_range')
-#     search_fields = ('job_title', 'job_department', 'job_salary_range')
-#     list_filter = ('job_title', 'job_department', 'job_salary_range')
+@admin.register(JobPosting)
+class JobPostingAdmin(admin.ModelAdmin):
+    list_display = ('job_title', 'job_department', 'job_salary_range')
+    search_fields = ('job_title', 'job_department', 'job_salary_range')
+    list_filter = ('job_title', 'job_department', 'job_salary_range')
 
 
 @admin.register(Attendance)
