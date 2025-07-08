@@ -137,7 +137,7 @@ class Employee(models.Model):
     postal_code = models.CharField(max_length=10, blank=True, null=True)
 
     # Job Details
-    employee_ID = models.CharField(primary_key=True, default=uuid.uuid4, max_length=100, editable=False, unique=True, blank=True)
+    employee_ID = models.AutoField(primary_key=True)
     job_title = models.CharField(max_length=100)
     department = models.ForeignKey('Department', on_delete=models.SET_NULL, null=True, blank=True, related_name='employees')
     employment_type = models.CharField(max_length=50, choices=EMP_TYPE)

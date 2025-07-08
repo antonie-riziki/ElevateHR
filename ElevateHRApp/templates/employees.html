@@ -403,6 +403,19 @@
             color: #721c24;
         }
 
+        .action-btn {
+            display: inline-block;
+            padding: 8px 12px;
+            background-color: #007bff;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+        }
+        .action-btn:hover {
+            background-color: #0056b3;
+        }
+
+
         /* Stats Cards */
         .stats-row {
             display: grid;
@@ -586,38 +599,38 @@
                 <!-- Employee Grid -->
                 <div class="employee-grid" id="employeeGrid">
                     <!-- Employee Card 1 -->
+                     {% for i in employees %}
                     <div class="employee-card" data-name="john smith" data-email="john.smith@company.com" data-position="software engineer" data-department="Engineering" data-status="Active">
                         <div class="employee-header">
                             <div class="employee-avatar">JS</div>
                             <div class="employee-info">
-                                <h3>John Smith</h3>
-                                <p class="employee-position">Software Engineer</p>
+                                <h3>{{ i.fname }} {{ i.lname }}</h3>
+                                <p class="employee-position">{{ i.employee_profession }}</p>
                             </div>
                             <span class="employee-status status-active">Active</span>
                         </div>
                         <div class="employee-details">
                             <div class="detail-row">
                                 <i class="fas fa-envelope"></i>
-                                <span>john.smith@company.com</span>
+                                <span>{{ i.email }}</span>
                             </div>
                             <div class="detail-row">
                                 <i class="fas fa-building"></i>
-                                <span>Engineering Department</span>
+                                <span>{{ i.department }}</span>
                             </div>
                             <div class="detail-row">
                                 <i class="fas fa-calendar"></i>
-                                <span>Hired: Jan 15, 2023</span>
+                                <span>Hired: {{ i.date_joined }}</span>
                             </div>
                             <div class="detail-row">
                                 <i class="fas fa-dollar-sign"></i>
-                                <span>$85,000/year</span>
+                                <span>$ {{ i.salary }}/year</span>
                             </div>
                         </div>
                         <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('john-smith')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
+                            <a class="action-btn" href="{% url 'employee_dashboard' i.employee_ID %}">
+                                <i class="fas fa-edit"></i> Edit
+                            </a>
                             <button class="action-btn" onclick="viewEmployee('john-smith')">
                                 <i class="fas fa-eye"></i>
                                 View
@@ -628,226 +641,7 @@
                             </button>
                         </div>
                     </div>
-
-                    <!-- Employee Card 2 -->
-                    <div class="employee-card" data-name="sarah johnson" data-email="sarah.johnson@company.com" data-position="hr manager" data-department="Human Resources" data-status="Active">
-                        <div class="employee-header">
-                            <div class="employee-avatar">SJ</div>
-                            <div class="employee-info">
-                                <h3>Sarah Johnson</h3>
-                                <p class="employee-position">HR Manager</p>
-                            </div>
-                            <span class="employee-status status-active">Active</span>
-                        </div>
-                        <div class="employee-details">
-                            <div class="detail-row">
-                                <i class="fas fa-envelope"></i>
-                                <span>sarah.johnson@company.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-building"></i>
-                                <span>Human Resources Department</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-calendar"></i>
-                                <span>Hired: Mar 20, 2022</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-dollar-sign"></i>
-                                <span>$75,000/year</span>
-                            </div>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('sarah-johnson')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn" onclick="viewEmployee('sarah-johnson')">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEmployee('sarah-johnson')">
-                                <i class="fas fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Employee Card 3 -->
-                    <div class="employee-card" data-name="michael chen" data-email="michael.chen@company.com" data-position="marketing specialist" data-department="Marketing" data-status="On Leave">
-                        <div class="employee-header">
-                            <div class="employee-avatar">MC</div>
-                            <div class="employee-info">
-                                <h3>Michael Chen</h3>
-                                <p class="employee-position">Marketing Specialist</p>
-                            </div>
-                            <span class="employee-status status-leave">On Leave</span>
-                        </div>
-                        <div class="employee-details">
-                            <div class="detail-row">
-                                <i class="fas fa-envelope"></i>
-                                <span>michael.chen@company.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-building"></i>
-                                <span>Marketing Department</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-calendar"></i>
-                                <span>Hired: Jun 10, 2023</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-dollar-sign"></i>
-                                <span>$65,000/year</span>
-                            </div>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('michael-chen')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn" onclick="viewEmployee('michael-chen')">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEmployee('michael-chen')">
-                                <i class="fas fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Employee Card 4 -->
-                    <div class="employee-card" data-name="emily davis" data-email="emily.davis@company.com" data-position="financial analyst" data-department="Finance" data-status="Active">
-                        <div class="employee-header">
-                            <div class="employee-avatar">ED</div>
-                            <div class="employee-info">
-                                <h3>Emily Davis</h3>
-                                <p class="employee-position">Financial Analyst</p>
-                            </div>
-                            <span class="employee-status status-active">Active</span>
-                        </div>
-                        <div class="employee-details">
-                            <div class="detail-row">
-                                <i class="fas fa-envelope"></i>
-                                <span>emily.davis@company.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-building"></i>
-                                <span>Finance Department</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-calendar"></i>
-                                <span>Hired: Nov 05, 2022</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-dollar-sign"></i>
-                                <span>$70,000/year</span>
-                            </div>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('emily-davis')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn" onclick="viewEmployee('emily-davis')">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEmployee('emily-davis')">
-                                <i class="fas fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Employee Card 5 -->
-                    <div class="employee-card" data-name="robert wilson" data-email="robert.wilson@company.com" data-position="sales manager" data-department="Sales" data-status="Inactive">
-                        <div class="employee-header">
-                            <div class="employee-avatar">RW</div>
-                            <div class="employee-info">
-                                <h3>Robert Wilson</h3>
-                                <p class="employee-position">Sales Manager</p>
-                            </div>
-                            <span class="employee-status status-inactive">Inactive</span>
-                        </div>
-                        <div class="employee-details">
-                            <div class="detail-row">
-                                <i class="fas fa-envelope"></i>
-                                <span>robert.wilson@company.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-building"></i>
-                                <span>Sales Department</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-calendar"></i>
-                                <span>Hired: Aug 12, 2021</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-dollar-sign"></i>
-                                <span>$80,000/year</span>
-                            </div>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('robert-wilson')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn" onclick="viewEmployee('robert-wilson')">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEmployee('robert-wilson')">
-                                <i class="fas fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Employee Card 6 -->
-                    <div class="employee-card" data-name="lisa martinez" data-email="lisa.martinez@company.com" data-position="ux designer" data-department="Engineering" data-status="Active">
-                        <div class="employee-header">
-                            <div class="employee-avatar">LM</div>
-                            <div class="employee-info">
-                                <h3>Lisa Martinez</h3>
-                                <p class="employee-position">UX Designer</p>
-                            </div>
-                            <span class="employee-status status-active">Active</span>
-                        </div>
-                        <div class="employee-details">
-                            <div class="detail-row">
-                                <i class="fas fa-envelope"></i>
-                                <span>lisa.martinez@company.com</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-building"></i>
-                                <span>Engineering Department</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-calendar"></i>
-                                <span>Hired: Feb 28, 2023</span>
-                            </div>
-                            <div class="detail-row">
-                                <i class="fas fa-dollar-sign"></i>
-                                <span>$72,000/year</span>
-                            </div>
-                        </div>
-                        <div class="employee-actions">
-                            <button class="action-btn" onclick="editEmployee('lisa-martinez')">
-                                <i class="fas fa-edit"></i>
-                                Edit
-                            </button>
-                            <button class="action-btn" onclick="viewEmployee('lisa-martinez')">
-                                <i class="fas fa-eye"></i>
-                                View
-                            </button>
-                            <button class="action-btn delete" onclick="deleteEmployee('lisa-martinez')">
-                                <i class="fas fa-trash"></i>
-                                Delete
-                            </button>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
         </div>

@@ -14,13 +14,18 @@ from dotenv import load_dotenv
 load_dotenv()
 sys.path.insert(1, './ElevateHRApp')
 
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse, HttpResponse
 from django.core.files.storage import FileSystemStorage
 
+from uuid import UUID
+
 from rag_model import get_qa_chain, query_system
+
+
+from .models import *
 
 # Initialize Africa's Talking and Google Generative AI
 genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
@@ -229,10 +234,18 @@ def index(request):
     return render(request, 'index.html')
 
 def employees(request):
-    return render(request, 'employees.html')
+    emp = Employee.objects.all()
+    context = {
+        'employees': emp,
+    }
+    return render(request, 'employees.html', context)
 
-def employee_dashboard(request):
-    return render(request, 'employee-dashboard.html')
+def employee_dashboard(request, employee_ID: UUID):
+    emp_dash = get_object_or_404(Employee, employee_ID=employee_ID)
+    context = { 
+        'emp_dash': emp_dash,
+    }
+    return render(request, 'employee-dashboard.html', context)
 
 def recruitment(request):
     return render(request, 'recruitment.html')
