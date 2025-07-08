@@ -520,20 +520,23 @@
                     <div class="employee-profile">
                         <div class="employee-avatar">JS</div>
                         <div class="employee-info">
-                            <h2>John Smith</h2>
+                            <h2>{{ emp_dash.fname }} {{ emp_dash.lname }}</h2>
                             <div class="employee-meta">
                                 <span class="status-badge status-active">Active</span>
-                                <span>Software Engineer</span>
+                                <span>{{ emp_dash.job_title }}</span>
                                 <span>•</span>
-                                <span>Engineering Dept</span>
+                                <span>{{ emp_dash.department }} Dept</span>
                                 <span>•</span>
-                                <span>ID: EMP001</span>
+                                <span>ID: EMP00{{ emp_dash.employee_ID }}</span>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="quick-actions">
+                    <button class="btn btn-secondary" onclick="startVideoCall()">
+                        🖨 Print Badge
+                    </button>
                     <button class="btn btn-info" onclick="startVideoCall()">
                         📹 Video Call
                     </button>

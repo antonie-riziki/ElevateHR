@@ -240,7 +240,7 @@ def employees(request):
     }
     return render(request, 'employees.html', context)
 
-def employee_dashboard(request, employee_ID: UUID):
+def employee_dashboard(request, employee_ID):
     emp_dash = get_object_or_404(Employee, employee_ID=employee_ID)
     context = { 
         'emp_dash': emp_dash,
