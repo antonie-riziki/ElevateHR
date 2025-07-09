@@ -572,8 +572,8 @@
         .kpi-card {
             background: white;
             padding: 16px 18px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -1133,12 +1133,11 @@
                                 <td>{{ payslip.employee.department }}</td>
                                 <td>{{ payslip.employee.employee_profession }}</td>
                                 <td>
-                                    <span class="employee-status status-{{ payslip.employee.status|lower }}">
+                                    <span class="employee-status status-{{ payslip.employee.employment_status|lower }}">
                                         {{ payslip.employee.employment_status }}
                                     </span>
                                 </td>
-                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d,
-                                    Y" }}</td>
+                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d, Y" }}</td>
                                 <td>${{ payslip.gross_salary|floatformat:2 }}</td>
                                 <td class="deductions-col">
                                     ${{ payslip.total_deductions|floatformat:2 }}
