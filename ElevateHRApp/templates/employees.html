@@ -602,7 +602,7 @@
                      {% for i in employees %}
                     <div class="employee-card" data-name="john smith" data-email="john.smith@company.com" data-position="software engineer" data-department="Engineering" data-status="Active">
                         <div class="employee-header">
-                            <div class="employee-avatar">JS</div>
+                            <div class="employee-avatar">{{ i.fname|slice:":1" }}{{ i.lname|slice:":1" }}</div>
                             <div class="employee-info">
                                 <h3>{{ i.fname }} {{ i.lname }}</h3>
                                 <p class="employee-position">{{ i.employee_profession }}</p>
