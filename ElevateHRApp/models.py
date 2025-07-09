@@ -235,16 +235,74 @@ class PerformanceReview(models.Model):
         return f"{self.performance_employee} {self.performance_reviewer}"
 
 
-class Payroll(models.Model):
-    payroll_employee = models.ForeignKey(Employee, on_delete=models.CASCADE)
-    payroll_date = models.DateField()
-    payroll_basic_salary = models.DecimalField(max_digits=10, decimal_places=2)
-    payroll_deductions = models.DecimalField(max_digits=10, decimal_places=2)
-    payroll_net_pay = models.DecimalField(max_digits=10, decimal_places=2)
-    payroll_paid_status = models.BooleanField(default=False)
+class Payslip(models.Model):
+    PAYSLIP_STATUS = [
+        ('Draft', 'Draft'),
+        ('Generated', 'Generated'),
+        ('Paid', 'Paid'),
+    ]
+
+    # Core Info
+    employee = models.ForeignKey(Employee, on_delete=models.CASCADE, related_name='payslips')
+    pay_period_start = models.DateField()
+    pay_period_end = models.DateField()
+    generated_on = models.DateTimeField(auto_now_add=True)
+    status = models.CharField(max_length=20, choices=PAYSLIP_STATUS, default='Draft')
+
+    # Earnings
+    basic_salary = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    allowances = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Total allowances")
+    bonuses = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="Bonuses for the pay period")
+    gross_salary = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    # Deductions
+    income_tax = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="PAYE")
+    nssf_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    nhif_deduction = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    other_deductions = models.DecimalField(max_digits=10, decimal_places=2, default=0.00, help_text="e.g., salary advance, loans")
+    total_deductions = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    # Final Pay
+    net_salary = models.DecimalField(max_digits=10, decimal_places=2, editable=False)
+
+    class Meta:
+        verbose_name = "Payslip"
+        verbose_name_plural = "Payslips"
+        ordering = ['-pay_period_end', 'employee']
+
+    def save(self, *args, **kwargs):
+        self.gross_salary = self.basic_salary + self.allowances + self.bonuses
+        self.total_deductions = self.income_tax + self.nssf_deduction + self.nhif_deduction + self.other_deductions
+        self.net_salary = self.gross_salary - self.total_deductions
+        super().save(*args, **kwargs)
 
     def __str__(self):
-        return f"{self.payroll_employee} {self.payroll_date} {self.payroll_paid_status}"
+        return f"Payslip for {self.employee} - {self.pay_period_start} to {self.pay_period_end}"
+
+
+class Disbursement(models.Model):
+    DISBURSEMENT_STATUS = [
+        ('Pending', 'Pending'),
+        ('Processing', 'Processing'),
+        ('Successful', 'Successful'),
+        ('Failed', 'Failed'),
+    ]
+
+    payslip = models.OneToOneField(Payslip, on_delete=models.CASCADE, related_name='disbursement')
+    disbursement_date = models.DateTimeField(auto_now_add=True)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    status = models.CharField(max_length=20, choices=DISBURSEMENT_STATUS, default='Pending')
+    payment_method = models.CharField(max_length=50, default='Bank Transfer')
+    transaction_id = models.CharField(max_length=100, blank=True, null=True)
+    failure_reason = models.TextField(blank=True, null=True)
+
+    class Meta:
+        verbose_name = "Disbursement"
+        verbose_name_plural = "Disbursements"
+        ordering = ['-disbursement_date']
+
+    def __str__(self):
+        return f"Disbursement for {self.payslip.employee} - {self.status}"
 
 
 class Training(models.Model):

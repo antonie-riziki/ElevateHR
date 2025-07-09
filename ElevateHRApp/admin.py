@@ -46,11 +46,33 @@ class PerformanceReviewAdmin(admin.ModelAdmin):
     list_filter = ('performance_employee', 'performance_reviewer', 'performance_rating')
 
 
-@admin.register(Payroll)
-class PayrollAdmin(admin.ModelAdmin):
-    list_display = ('payroll_employee', 'payroll_date', 'payroll_paid_status')
-    search_fields = ('payroll_employee', 'payroll_date', 'payroll_paid_status')
-    list_filter = ('payroll_employee', 'payroll_date', 'payroll_paid_status')
+@admin.register(Payslip)
+class PayslipAdmin(admin.ModelAdmin):
+    list_display = ('employee', 'pay_period_start', 'pay_period_end', 'status', 'net_salary')
+    search_fields = ('employee__fname', 'employee__lname', 'status')
+    list_filter = ('status', 'pay_period_start', 'pay_period_end')
+    readonly_fields = ('generated_on', 'gross_salary', 'total_deductions', 'net_salary')
+    fieldsets = (
+        ('Core Information', {
+            'fields': ('employee', ('pay_period_start', 'pay_period_end'), 'status')
+        }),
+        ('Earnings', {
+            'fields': ('basic_salary', 'allowances', 'bonuses', 'gross_salary')
+        }),
+        ('Deductions', {
+            'fields': ('income_tax', 'nssf_deduction', 'nhif_deduction', 'other_deductions', 'total_deductions')
+        }),
+        ('Summary', {
+            'fields': ('net_salary', 'generated_on')
+        }),
+    )
+
+@admin.register(Disbursement)
+class DisbursementAdmin(admin.ModelAdmin):
+    list_display = ('payslip', 'status', 'disbursement_date', 'amount', 'transaction_id')
+    search_fields = ('payslip__employee__fname', 'payslip__employee__lname', 'status', 'transaction_id')
+    list_filter = ('status', 'disbursement_date')
+    readonly_fields = ('disbursement_date',)
 
 
 @admin.register(Training)
