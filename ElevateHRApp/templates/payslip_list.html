@@ -170,6 +170,127 @@
             color: #0056b3;
         }
 
+        /* --- FILTERS --- */
+        .filter-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+            margin-bottom: 16px !important;
+            align-items: flex-end;
+        }
+        .filter-group {
+            min-width: 170px;
+            flex: 1 1 170px;
+            margin-bottom: 0;
+        }
+        .filter-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #2c3e50;
+            margin-bottom: 5px;
+        }
+        .filter-select {
+            padding: 7px 10px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 7px;
+            background: white;
+            font-size: 13px;
+            width: 100%;
+            min-width: 0;
+        }
+        .filter-btn {
+            font-size: 13px;
+            padding: 7px 14px;
+            border-radius: 7px;
+            margin-top: 0;
+            margin-bottom: 0;
+        }
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        /* --- BULK OPS & EXPORT --- */
+        .bulk-ops, .export-ops {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .bulk-ops input[type="checkbox"] {
+            margin-right: 4px;
+        }
+        /* --- TABLE --- */
+        .payslip-table-container {
+            margin-top: 10px;
+        }
+        .payslip-table th, .payslip-table td {
+            padding: 7px 8px;
+            font-size: 13px;
+        }
+        .payslip-table th {
+            font-size: 11px;
+            white-space: nowrap;
+        }
+        .action-link, .action-btn {
+            font-size: 12px;
+            padding: 0 2px;
+        }
+        /* --- PAGINATION --- */
+        .pagination-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        /* --- ENHANCED TABLE FEATURES --- */
+        .table-features {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        /* --- KPI & CHARTS --- */
+        .kpi-grid {
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .kpi-card {
+            padding: 10px 12px;
+            border-radius: 8px;
+        }
+        .kpi-header {
+            margin-bottom: 4px;
+        }
+        .kpi-title {
+            font-size: 11px;
+        }
+        .kpi-icon {
+            width: 26px;
+            height: 26px;
+            font-size: 13px;
+            border-radius: 6px;
+        }
+        .kpi-number {
+            font-size: 16px;
+        }
+        .charts-grid {
+            gap: 10px;
+            margin-bottom: 12px;
+        }
+        .chart-container {
+            padding: 10px 6px 6px 6px;
+            border-radius: 8px;
+            height: 220px;
+        }
+        .chart-container h3.section-title {
+            font-size: 13px;
+            margin-bottom: 4px;
+        }
         /* Responsive Design */
         @media (max-width: 768px) {
             .payslips-header {
@@ -179,6 +300,16 @@
             }
             .payslip-table-container {
                 padding: 15px;
+            }
+        }
+        @media (max-width: 900px) {
+            .filter-grid {
+                flex-direction: column;
+                gap: 10px 0;
+            }
+            .quick-filters, .bulk-ops, .export-ops, .table-features, .pagination-bar {
+                flex-direction: column;
+                gap: 6px;
             }
         }
 
@@ -347,57 +478,44 @@
         }
 
         .filter-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 10px;
-        }
-
-        .filter-group {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 12px 18px;
+            margin-bottom: 16px !important;
+            align-items: flex-end;
         }
-
+        .filter-group {
+            min-width: 170px;
+            flex: 1 1 170px;
+            margin-bottom: 0;
+        }
         .filter-label {
+            font-size: 13px;
             font-weight: 500;
             color: #2c3e50;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
-
         .filter-select {
-            padding: 12px 15px;
-            border: 2px solid #e9ecef;
-            border-radius: 10px;
+            padding: 7px 10px;
+            border: 1.5px solid #e9ecef;
+            border-radius: 7px;
             background: white;
             font-size: 13px;
-            transition: border-color 0.3s ease;
+            width: 100%;
+            min-width: 0;
         }
-
-        .filter-select:focus {
-            outline: none;
-            border-color: #667eea;
-        }
-
         .filter-btn {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 8px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            align-self: end;
+            font-size: 13px;
+            padding: 7px 14px;
+            border-radius: 7px;
+            margin-top: 0;
+            margin-bottom: 0;
         }
-
-        .filter-btn i {
-            font-size: 15px;
+        .quick-filters {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
         }
-
-        .filter-btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.3);
-        }
-
         /* KPI Overview */
         .kpi-grid {
             display: grid;
@@ -759,8 +877,8 @@
                     </div>
                 </div>
 
-                <!-- 1. Search & Filtering -->
-                <div class="filter-grid" style="margin-bottom: 20px;">
+                <!-- FILTERS -->
+                <div class="filter-grid">
                     <div class="filter-group">
                         <label class="filter-label">Search</label>
                         <input type="text" class="filter-select" id="searchInput" placeholder="Employee name or ID">
@@ -791,22 +909,28 @@
                     </div>
                     <div class="filter-group">
                         <label class="filter-label">Date Range</label>
-                        <input type="date" class="filter-select" id="dateFrom"> to
-                        <input type="date" class="filter-select" id="dateTo">
+                        <div style="display:flex;gap:4px;">
+                            <input type="date" class="filter-select" id="dateFrom" style="flex:1;">
+                            <span style="align-self:center;font-size:12px;padding:0 2px;">to</span>
+                            <input type="date" class="filter-select" id="dateTo" style="flex:1;">
+                        </div>
                     </div>
-                    <div class="filter-group" style="align-self: end;">
+                    <div class="filter-group" style="min-width:100px;">
                         <button class="filter-btn" onclick="applyFilters()">Apply Filters</button>
                     </div>
                 </div>
-                <div style="margin-bottom: 20px;">
+                <div class="quick-filters">
                     <button class="filter-btn" onclick="quickFilter('this_month')">This Month</button>
                     <button class="filter-btn" onclick="quickFilter('last_month')">Last Month</button>
                     <button class="filter-btn" onclick="quickFilter('this_quarter')">This Quarter</button>
                 </div>
 
+
                 <!-- 2. Bulk Operations -->
-                <div style="margin-bottom: 10px;">
-                    <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"> Select All
+                <div class="bulk-ops" style="margin-bottom: 10px;">
+                    <label style="display:flex;align-items:center;">
+                        <input type="checkbox" id="selectAll" onclick="toggleSelectAll(this)"> Select All
+                    </label>
                     <button class="filter-btn" onclick="bulkAction('generate')">Generate</button>
                     <button class="filter-btn" onclick="bulkAction('email')">Send Email</button>
                     <button class="filter-btn" onclick="bulkAction('export')">Export</button>
@@ -814,7 +938,7 @@
                 </div>
 
                 <!-- 3. Export & Reporting -->
-                <div style="margin-bottom: 20px;">
+                <div class="export-ops" style="margin-bottom: 20px;">
                     <button class="filter-btn" onclick="exportPayslips('pdf')"><i class="fas fa-file-pdf"></i> Export PDF</button>
                     <button class="filter-btn" onclick="exportPayslips('excel')"><i class="fas fa-file-excel"></i> Export Excel</button>
                     <button class="filter-btn" onclick="exportPayslips('csv')"><i class="fas fa-file-csv"></i> Export CSV</button>
@@ -877,7 +1001,7 @@
                 </div>
 
                 <!-- 8. Enhanced Table Features -->
-                <div style="margin-bottom: 10px;">
+                <div class="table-features" style="margin-bottom: 10px;">
                     <button class="filter-btn" onclick="toggleColumn('deductions')">Toggle Deductions</button>
                     <button class="filter-btn" onclick="toggleColumn('net_salary')">Toggle Net Salary</button>
                 </div>
