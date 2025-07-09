@@ -572,8 +572,8 @@
         .kpi-card {
             background: white;
             padding: 16px 18px;
-            border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            border-radius: 15px;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -988,7 +988,7 @@
                                 <select name="employee" id="employee" required
                                     style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
                                     {% for employee in employees %}
-                                    <option value="{{ employee.id }}">{{ employee.fname }} {{ employee.lname }}</option>
+                                        <option value="{{ employee.employee_ID }}">{{ employee.fname }} {{ employee.lname }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
@@ -1133,12 +1133,11 @@
                                 <td>{{ payslip.employee.department }}</td>
                                 <td>{{ payslip.employee.employee_profession }}</td>
                                 <td>
-                                    <span class="employee-status status-{{ payslip.employee.status|lower }}">
-                                        {{ payslip.employee.status }}
+                                    <span class="employee-status status-{{ payslip.employee.employment_status|lower }}">
+                                        {{ payslip.employee.employment_status }}
                                     </span>
                                 </td>
-                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d,
-                                    Y" }}</td>
+                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d, Y" }}</td>
                                 <td>${{ payslip.gross_salary|floatformat:2 }}</td>
                                 <td class="deductions-col">
                                     ${{ payslip.total_deductions|floatformat:2 }}
@@ -1239,6 +1238,57 @@
                 labels: ['HR', 'Finance', 'Engineering', 'Sales'],
                 datasets: [{ data: [10, 15, 40, 20], backgroundColor: ['#667eea', '#2ecc71', '#f39c12', '#e74c3c'] }]
             }
+        });
+
+        document.getElementById('generatePayslipForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const form = e.target;
+            const data = new FormData(form);
+            fetch(form.action, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': data.get('csrfmiddlewaretoken'),
+                },
+                body: data
+            })
+                .then(response => response.json())
+                .then(result => {
+                    if (result.success) {
+                        alert(result.message);
+                        closeGeneratePayslipModal();
+
+                        // Add the new payslip to the table
+                        const payslip = result.payslip;
+                        const tbody = document.querySelector('.payslip-table tbody');
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td><input type="checkbox" class="row-checkbox"></td>
+                            <td>${payslip.employee}</td>
+                            <td>${payslip.department}</td>
+                            <td>${payslip.position}</td>
+                            <td>
+                                <span class="employee-status status-${payslip.status.toLowerCase()}">
+                                    ${payslip.status}
+                                </span>
+                            </td>
+                            <td>${payslip.pay_period_start} - ${payslip.pay_period_end}</td>
+                            <td>$${payslip.gross_salary.toFixed(2)}</td>
+                            <td class="deductions-col">$${payslip.total_deductions.toFixed(2)}</td>
+                            <td class="net_salary-col">$${payslip.net_salary.toFixed(2)}</td>
+                            <td>
+                                <span class="status-${payslip.payslip_status.toLowerCase()}">${payslip.payslip_status}</span>
+                            </td>
+                            <td>
+                                <!-- Add your action links/buttons here -->
+                            </td>
+                        `;
+                        // Insert at the top
+                        tbody.prepend(row);
+                    } else {
+                        alert('Error: ' + JSON.stringify(result.errors));
+                    }
+                })
+                .catch(() => alert('An error occurred. Please try again.'));
         });
     </script>
 </body>
