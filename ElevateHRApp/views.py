@@ -1,4 +1,3 @@
-
 import africastalking
 import os
 import sys
@@ -26,6 +25,7 @@ from rag_model import get_qa_chain, query_system
 
 
 from .models import *
+from .forms import PayslipForm
 
 # Initialize Africa's Talking and Google Generative AI
 genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
@@ -267,6 +267,25 @@ def performance(request):
 
 def performance_management(request):
     return render(request, 'performance.html')
+
+def payslip_list(request):
+    payslips = Payslip.objects.all().order_by('-pay_period_end')
+    context = {
+        'payslips': payslips,
+    }
+    return render(request, 'payslip_list.html', context)
+
+def generate_payslip(request):
+    if request.method == 'POST':
+        form = PayslipForm(request.POST)
+        if form.is_valid():
+            payslip = form.save(commit=False)
+            payslip.gross_salary = form.cleaned_data['gross_salary']
+            payslip.save()
+            return redirect('payslip_list')  # or wherever you want to redirect
+    else:
+        form = PayslipForm()
+    return render(request, 'generate_payslip.html', {'form': form})
 
 
 
