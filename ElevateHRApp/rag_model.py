@@ -89,11 +89,14 @@ def create_vector_store(docs: List[Document], embeddings, chunk_size: int = 1000
 PROMPT_TEMPLATE = """
   Use the following pieces of context to answer the question at the end.
   If you don't know the answer, just say that you don't know, don't try to make up an answer.
-
+  
+  NOTE: Return a well structured output that is readable to the user, with clear formatting
   {context}
 
   Question: {question}
-  Answer:"""
+  Answer:
+  
+  """
 
 
 
