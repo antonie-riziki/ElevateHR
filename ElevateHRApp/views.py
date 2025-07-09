@@ -281,7 +281,23 @@ def generate_payslip(request):
         payslip = form.save(commit=False)
         payslip.gross_salary = form.cleaned_data['gross_salary']
         payslip.save()
-        return JsonResponse({'success': True, 'message': 'Payslip generated successfully.'})
+        return JsonResponse({
+            'success': True,
+            'message': 'Payslip generated successfully.',
+            'payslip': {
+                'id': payslip.id,
+                'employee': f"{payslip.employee.fname} {payslip.employee.lname}",
+                'department': payslip.employee.department,
+                'position': payslip.employee.employee_profession,
+                'status': payslip.employee.employment_status,
+                'pay_period_start': payslip.pay_period_start.strftime('%b %d, %Y'),
+                'pay_period_end': payslip.pay_period_end.strftime('%b %d, %Y'),
+                'gross_salary': float(payslip.gross_salary),
+                'total_deductions': float(getattr(payslip, 'total_deductions', 0)),
+                'net_salary': float(getattr(payslip, 'net_salary', 0)),
+                'payslip_status': payslip.status,
+            }
+        })
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
