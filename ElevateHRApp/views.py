@@ -287,7 +287,7 @@ def generate_payslip(request):
             'payslip': {
                 'id': payslip.id,
                 'employee': f"{payslip.employee.fname} {payslip.employee.lname}",
-                'department': payslip.employee.department,
+                'department': str(payslip.employee.department) if payslip.employee.department else "",
                 'position': payslip.employee.employee_profession,
                 'status': payslip.employee.employment_status,
                 'pay_period_start': payslip.pay_period_start.strftime('%b %d, %Y'),
