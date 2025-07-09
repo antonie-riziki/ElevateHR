@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-dcv*p#dupc)wut_l9&q#iej#zi&h8k$#u698qv!1(=si*gxc%m
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['zxgt43-8000.csb.app']
 
 
 # Application definition
@@ -61,7 +61,7 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'ElevateHR.urls'
 
 TEMPLATES = [
-        {
+    {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
         'DIRS': [r'ElevateHR/ElevateHR/ElevateHRApp/templates'],
         'APP_DIRS': True,
@@ -148,7 +148,6 @@ REST_FRAMEWORK = {
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-
 JAZZMIN_SETTINGS = {
     # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": "ElevateHR",
@@ -195,7 +194,8 @@ JAZZMIN_SETTINGS = {
     "topmenu_links": [
 
         # Url that gets reversed (Permissions can be added)
-        {"name": "Home",  "url": "admin:index", "permissions": ["auth.view_user"]},
+        {"name": "Home",  "url": "admin:index",
+            "permissions": ["auth.view_user"]},
 
         # external url that opens in a new window (Permissions can be added)
         {"name": "Support", "url": "https://github.com/antonie-riziki", "new_window": True},
