@@ -100,6 +100,11 @@ class Employee(models.Model):
 
     CURRENT_NATIONALITY = [
         ('Kenya', 'Kenya'),
+        ('Nigeria', 'Nigeria'),
+        ('South Africa', 'South Africa'),
+        ('Uganda', 'Uganda'),
+        ('Tanzania', 'Tanzania'),
+        ('Ghana', 'Ghana'),
     ]
 
     EMP_TYPE = [

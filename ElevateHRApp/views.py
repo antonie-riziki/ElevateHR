@@ -16,6 +16,7 @@ sys.path.insert(1, './ElevateHRApp')
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.views.decorators.csrf import csrf_exempt
+from django.views.decorators.http import require_POST
 from django.http import JsonResponse, HttpResponse
 from django.core.files.storage import FileSystemStorage
 
@@ -269,23 +270,20 @@ def performance_management(request):
     return render(request, 'performance.html')
 
 def payslip_list(request):
-    payslips = Payslip.objects.all().order_by('-pay_period_end')
-    context = {
-        'payslips': payslips,
-    }
-    return render(request, 'payslip_list.html', context)
+    payslips = Payslip.objects.select_related('employee').all()
+    employees = Employee.objects.all()
+    return render(request, 'payslip_list.html', {'payslips': payslips, 'employees': employees})
 
+@require_POST
 def generate_payslip(request):
-    if request.method == 'POST':
-        form = PayslipForm(request.POST)
-        if form.is_valid():
-            payslip = form.save(commit=False)
-            payslip.gross_salary = form.cleaned_data['gross_salary']
-            payslip.save()
-            return redirect('payslip_list')  # or wherever you want to redirect
+    form = PayslipForm(request.POST)
+    if form.is_valid():
+        payslip = form.save(commit=False)
+        payslip.gross_salary = form.cleaned_data['gross_salary']
+        payslip.save()
+        return JsonResponse({'success': True, 'message': 'Payslip generated successfully.'})
     else:
-        form = PayslipForm()
-    return render(request, 'generate_payslip.html', {'form': form})
+        return JsonResponse({'success': False, 'errors': form.errors}, status=400)
 
 
 

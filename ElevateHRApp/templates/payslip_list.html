@@ -2,6 +2,7 @@
 
 {% load static %}
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -39,7 +40,7 @@
         .header {
             background: white;
             padding: 20px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -117,8 +118,9 @@
             background: white;
             padding: 12px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-            overflow-x: auto; /* For responsive tables */
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+            overflow-x: auto;
+            /* For responsive tables */
         }
 
         .payslip-table {
@@ -127,7 +129,8 @@
             margin-top: 20px;
         }
 
-        .payslip-table th, .payslip-table td {
+        .payslip-table th,
+        .payslip-table td {
             padding: 8px 10px;
             font-size: 13px;
             text-align: left;
@@ -150,10 +153,12 @@
             color: #28a745;
             font-weight: bold;
         }
+
         .payslip-table .status-draft {
             color: #ffc107;
             font-weight: bold;
         }
+
         .payslip-table .status-generated {
             color: #007bff;
             font-weight: bold;
@@ -178,17 +183,20 @@
             margin-bottom: 16px !important;
             align-items: flex-end;
         }
+
         .filter-group {
             min-width: 170px;
             flex: 1 1 170px;
             margin-bottom: 0;
         }
+
         .filter-label {
             font-size: 13px;
             font-weight: 500;
             color: #2c3e50;
             margin-bottom: 5px;
         }
+
         .filter-select {
             padding: 7px 10px;
             border: 1.5px solid #e9ecef;
@@ -198,6 +206,7 @@
             width: 100%;
             min-width: 0;
         }
+
         .filter-btn {
             font-size: 13px;
             padding: 7px 14px;
@@ -205,38 +214,49 @@
             margin-top: 0;
             margin-bottom: 0;
         }
+
         .quick-filters {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
         }
+
         /* --- BULK OPS & EXPORT --- */
-        .bulk-ops, .export-ops {
+        .bulk-ops,
+        .export-ops {
             display: flex;
             gap: 10px;
             align-items: center;
             margin-bottom: 12px;
             flex-wrap: wrap;
         }
+
         .bulk-ops input[type="checkbox"] {
             margin-right: 4px;
         }
+
         /* --- TABLE --- */
         .payslip-table-container {
             margin-top: 10px;
         }
-        .payslip-table th, .payslip-table td {
+
+        .payslip-table th,
+        .payslip-table td {
             padding: 7px 8px;
             font-size: 13px;
         }
+
         .payslip-table th {
             font-size: 11px;
             white-space: nowrap;
         }
-        .action-link, .action-btn {
+
+        .action-link,
+        .action-btn {
             font-size: 12px;
             padding: 0 2px;
         }
+
         /* --- PAGINATION --- */
         .pagination-bar {
             display: flex;
@@ -247,6 +267,7 @@
             flex-wrap: wrap;
             gap: 8px;
         }
+
         /* --- ENHANCED TABLE FEATURES --- */
         .table-features {
             display: flex;
@@ -254,43 +275,53 @@
             margin-bottom: 10px;
             flex-wrap: wrap;
         }
+
         /* --- KPI & CHARTS --- */
         .kpi-grid {
             gap: 10px;
             margin-bottom: 12px;
         }
+
         .kpi-card {
             padding: 10px 12px;
             border-radius: 8px;
         }
+
         .kpi-header {
             margin-bottom: 4px;
         }
+
         .kpi-title {
             font-size: 11px;
         }
+
         .kpi-icon {
             width: 26px;
             height: 26px;
             font-size: 13px;
             border-radius: 6px;
         }
+
         .kpi-number {
             font-size: 16px;
         }
+
         .charts-grid {
             gap: 10px;
             margin-bottom: 12px;
         }
+
         .chart-container {
             padding: 10px 6px 6px 6px;
             border-radius: 8px;
             height: 220px;
         }
+
         .chart-container h3.section-title {
             font-size: 13px;
             margin-bottom: 4px;
         }
+
         /* Responsive Design */
         @media (max-width: 768px) {
             .payslips-header {
@@ -298,16 +329,23 @@
                 align-items: flex-start;
                 gap: 15px;
             }
+
             .payslip-table-container {
                 padding: 15px;
             }
         }
+
         @media (max-width: 900px) {
             .filter-grid {
                 flex-direction: column;
                 gap: 10px 0;
             }
-            .quick-filters, .bulk-ops, .export-ops, .table-features, .pagination-bar {
+
+            .quick-filters,
+            .bulk-ops,
+            .export-ops,
+            .table-features,
+            .pagination-bar {
                 flex-direction: column;
                 gap: 6px;
             }
@@ -320,7 +358,7 @@
             color: white;
             transition: all 0.3s ease;
             position: relative;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
         }
 
         .sidebar.collapsed {
@@ -329,7 +367,7 @@
 
         .sidebar-header {
             padding: 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -368,7 +406,7 @@
         }
 
         .toggle-btn:hover {
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
         }
 
         .nav-menu {
@@ -385,14 +423,15 @@
             align-items: center;
             padding: 10px 14px;
             text-decoration: none;
-            color: rgba(255,255,255,0.8);
+            color: rgba(255, 255, 255, 0.8);
             transition: all 0.3s ease;
             position: relative;
         }
 
-        .nav-link:hover, .nav-link.active {
+        .nav-link:hover,
+        .nav-link.active {
             color: white;
-            background: rgba(255,255,255,0.1);
+            background: rgba(255, 255, 255, 0.1);
             transform: translateX(5px);
         }
 
@@ -432,7 +471,7 @@
         .header {
             background: white;
             padding: 20px 30px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
@@ -484,17 +523,20 @@
             margin-bottom: 16px !important;
             align-items: flex-end;
         }
+
         .filter-group {
             min-width: 170px;
             flex: 1 1 170px;
             margin-bottom: 0;
         }
+
         .filter-label {
             font-size: 13px;
             font-weight: 500;
             color: #2c3e50;
             margin-bottom: 5px;
         }
+
         .filter-select {
             padding: 7px 10px;
             border: 1.5px solid #e9ecef;
@@ -504,6 +546,7 @@
             width: 100%;
             min-width: 0;
         }
+
         .filter-btn {
             font-size: 13px;
             padding: 7px 14px;
@@ -511,11 +554,13 @@
             margin-top: 0;
             margin-bottom: 0;
         }
+
         .quick-filters {
             display: flex;
             gap: 8px;
             margin-bottom: 16px;
         }
+
         /* KPI Overview */
         .kpi-grid {
             display: grid;
@@ -528,7 +573,7 @@
             background: white;
             padding: 16px 18px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             transition: transform 0.3s ease, box-shadow 0.3s ease;
             position: relative;
             overflow: hidden;
@@ -536,7 +581,7 @@
 
         .kpi-card:hover {
             transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
         }
 
         .kpi-header {
@@ -582,7 +627,7 @@
             background: white;
             padding: 14px 10px 10px 10px;
             border-radius: 10px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
             margin-bottom: 18px;
             width: 100%;
             /* max-width: 600px; */
@@ -594,7 +639,7 @@
 
         .chart-container:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 20px rgba(0,0,0,0.12);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.12);
         }
 
         .charts-grid {
@@ -608,7 +653,7 @@
         .employee-table {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 5px 15px rgba(0,0,0,0.08);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             overflow: hidden;
             margin-bottom: 30px;
         }
@@ -628,7 +673,8 @@
             border-collapse: collapse;
         }
 
-        th, td {
+        th,
+        td {
             padding: 15px 20px;
             text-align: left;
             border-bottom: 1px solid #ecf0f1;
@@ -725,7 +771,7 @@
             padding: 20px;
             border-radius: 15px;
             border-left: 4px solid #667eea;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.08);
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
             transition: transform 0.3s ease;
         }
 
@@ -768,22 +814,65 @@
         }
 
         /* Color variants */
-        .bg-blue { background: linear-gradient(135deg, #3498db, #2980b9); }
-        .bg-green { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-        .bg-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
-        .bg-red { background: linear-gradient(135deg, #e74c3c, #c0392b); }
-        .bg-purple { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-        .bg-teal { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .bg-blue {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+        }
 
-        .progress-blue { background: #3498db; }
-        .progress-green { background: #27ae60; }
-        .progress-orange { background: #f39c12; }
-        .progress-purple { background: #9b59b6; }
+        .bg-green {
+            background: linear-gradient(135deg, #2ecc71, #27ae60);
+        }
 
-        .status-excellent { background: #d4edda; color: #155724; }
-        .status-good { background: #cce7ff; color: #004085; }
-        .status-average { background: #fff3cd; color: #856404; }
-        .status-poor { background: #f8d7da; color: #721c24; }
+        .bg-orange {
+            background: linear-gradient(135deg, #f39c12, #e67e22);
+        }
+
+        .bg-red {
+            background: linear-gradient(135deg, #e74c3c, #c0392b);
+        }
+
+        .bg-purple {
+            background: linear-gradient(135deg, #9b59b6, #8e44ad);
+        }
+
+        .bg-teal {
+            background: linear-gradient(135deg, #1abc9c, #16a085);
+        }
+
+        .progress-blue {
+            background: #3498db;
+        }
+
+        .progress-green {
+            background: #27ae60;
+        }
+
+        .progress-orange {
+            background: #f39c12;
+        }
+
+        .progress-purple {
+            background: #9b59b6;
+        }
+
+        .status-excellent {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-good {
+            background: #cce7ff;
+            color: #004085;
+        }
+
+        .status-average {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-poor {
+            background: #f8d7da;
+            color: #721c24;
+        }
 
         /* Responsive Design */
         @media (max-width: 768px) {
@@ -803,7 +892,9 @@
                 padding: 10px;
             }
 
-            .kpi-card, .chart-container, .payslip-table-container {
+            .kpi-card,
+            .chart-container,
+            .payslip-table-container {
                 padding: 8px;
             }
 
@@ -811,8 +902,46 @@
                 font-size: 18px;
             }
         }
+
+        .employee-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 500;
+            text-transform: uppercase;
+            margin-left: auto;
+        }
+
+        .status-active {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-inactive {
+            background: #f8d7da;
+            color: #721c24;
+        }
+
+        .status-leave {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .modal-cancel-btn {
+            background: #e0e0e0;
+            color: #333;
+            border: none;
+            padding: 7px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+
+        .modal-cancel-btn:hover {
+            background: #d5d5d5;
+        }
     </style>
 </head>
+
 <body>
     <div class="container">
 
@@ -847,83 +976,49 @@
                 </div>
 
                 <!-- Generate Payslip Modal -->
-                <div id="generatePayslipModal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,62,80,0.25); z-index:2000; align-items:center; justify-content:center;">
-                    <div style="background:#fff; border-radius:10px; max-width:400px; width:90%; margin:auto; padding:24px 20px; box-shadow:0 8px 32px rgba(44,62,80,0.18); position:relative;">
+                <div id="generatePayslipModal"
+                    style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(44,62,80,0.25); z-index:2000; align-items:center; justify-content:center;">
+                    <div
+                        style="background:#fff; border-radius:10px; max-width:400px; width:90%; margin:auto; padding:24px 20px; box-shadow:0 8px 32px rgba(44,62,80,0.18); position:relative;">
                         <h3 style="margin-bottom:18px; font-size:18px; color:#2c3e50;">Generate New Payslip</h3>
                         <form id="generatePayslipForm" method="post" action="{% url 'generate_payslip' %}">
                             {% csrf_token %}
                             <div style="margin-bottom:12px;">
                                 <label for="employee" style="font-weight:500;">Employee</label>
-                                <select name="employee" id="employee" required style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
+                                <select name="employee" id="employee" required
+                                    style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
                                     {% for employee in employees %}
-                                        <option value="{{ employee.id }}">{{ employee.fname }} {{ employee.lname }}</option>
+                                    <option value="{{ employee.id }}">{{ employee.fname }} {{ employee.lname }}</option>
                                     {% endfor %}
                                 </select>
                             </div>
                             <div style="margin-bottom:12px;">
-                                <label for="pay_period" style="font-weight:500;">Pay Period</label>
-                                <input type="month" name="pay_period" id="pay_period" required style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
+                                <label for="pay_period_start" style="font-weight:500;">Pay Period Start</label>
+                                <input type="date" name="pay_period_start" id="pay_period_start" required
+                                    style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
+                            </div>
+                            <div style="margin-bottom:12px;">
+                                <label for="pay_period_end" style="font-weight:500;">Pay Period End</label>
+                                <input type="date" name="pay_period_end" id="pay_period_end" required
+                                    style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
                             </div>
                             <div style="margin-bottom:18px;">
                                 <label for="gross_salary" style="font-weight:500;">Gross Salary</label>
-                                <input type="number" name="gross_salary" id="gross_salary" required min="0" step="0.01" style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
+                                <input type="number" name="gross_salary" id="gross_salary" required min="0" step="0.01"
+                                    style="width:100%;padding:8px 10px;border-radius:6px;border:1px solid #e9ecef;">
                             </div>
                             <div style="display:flex; justify-content:flex-end; gap:10px;">
-                                <button type="button" onclick="closeGeneratePayslipModal()" style="background:#e0e0e0;color:#333;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;">Cancel</button>
-                                <button type="submit" style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;">Generate</button>
+                                <button type="button" onclick="closeGeneratePayslipModal()"
+                                    style="background:#e0e0e0;color:#333;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;">Cancel</button>
+                                <button type="submit"
+                                    style="background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);color:#fff;border:none;padding:7px 16px;border-radius:6px;cursor:pointer;">Generate</button>
                             </div>
                         </form>
-                        <button onclick="closeGeneratePayslipModal()" style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:18px;color:#888;cursor:pointer;">&times;</button>
+                        <button onclick="closeGeneratePayslipModal()"
+                            style="position:absolute;top:10px;right:14px;background:none;border:none;font-size:18px;color:#888;cursor:pointer;">&times;</button>
                     </div>
                 </div>
 
-                <!-- FILTERS -->
-                <div class="filter-grid">
-                    <div class="filter-group">
-                        <label class="filter-label">Search</label>
-                        <input type="text" class="filter-select" id="searchInput" placeholder="Employee name or ID">
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Pay Period</label>
-                        <input type="month" class="filter-select" id="payPeriodInput">
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Department</label>
-                        <select class="filter-select" id="departmentSelect">
-                            <option value="">All</option>
-                            <option>HR</option>
-                            <option>Finance</option>
-                            <option>Engineering</option>
-                            <option>Sales</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Status</label>
-                        <select class="filter-select" id="statusSelect">
-                            <option value="">All</option>
-                            <option>Draft</option>
-                            <option>Generated</option>
-                            <option>Paid</option>
-                            <option>Sent</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Date Range</label>
-                        <div style="display:flex;gap:4px;">
-                            <input type="date" class="filter-select" id="dateFrom" style="flex:1;">
-                            <span style="align-self:center;font-size:12px;padding:0 2px;">to</span>
-                            <input type="date" class="filter-select" id="dateTo" style="flex:1;">
-                        </div>
-                    </div>
-                    <div class="filter-group" style="min-width:100px;">
-                        <button class="filter-btn" onclick="applyFilters()">Apply Filters</button>
-                    </div>
-                </div>
-                <div class="quick-filters">
-                    <button class="filter-btn" onclick="quickFilter('this_month')">This Month</button>
-                    <button class="filter-btn" onclick="quickFilter('last_month')">Last Month</button>
-                    <button class="filter-btn" onclick="quickFilter('this_quarter')">This Quarter</button>
-                </div>
 
 
                 <!-- 2. Bulk Operations -->
@@ -939,11 +1034,15 @@
 
                 <!-- 3. Export & Reporting -->
                 <div class="export-ops" style="margin-bottom: 20px;">
-                    <button class="filter-btn" onclick="exportPayslips('pdf')"><i class="fas fa-file-pdf"></i> Export PDF</button>
-                    <button class="filter-btn" onclick="exportPayslips('excel')"><i class="fas fa-file-excel"></i> Export Excel</button>
-                    <button class="filter-btn" onclick="exportPayslips('csv')"><i class="fas fa-file-csv"></i> Export CSV</button>
+                    <button class="filter-btn" onclick="exportPayslips('pdf')"><i class="fas fa-file-pdf"></i> Export
+                        PDF</button>
+                    <button class="filter-btn" onclick="exportPayslips('excel')"><i class="fas fa-file-excel"></i>
+                        Export Excel</button>
+                    <button class="filter-btn" onclick="exportPayslips('csv')"><i class="fas fa-file-csv"></i> Export
+                        CSV</button>
                     <button class="filter-btn" onclick="window.print()"><i class="fas fa-print"></i> Print</button>
-                    <button class="filter-btn" onclick="generatePayrollReport()"><i class="fas fa-chart-bar"></i> Payroll Report</button>
+                    <button class="filter-btn" onclick="generatePayrollReport()"><i class="fas fa-chart-bar"></i>
+                        Payroll Report</button>
                 </div>
 
                 <!-- 6. Data Visualization -->
@@ -1011,13 +1110,18 @@
                     <table class="payslip-table">
                         <thead>
                             <tr>
-                                <th></th> <!-- Checkbox for bulk select -->
+                                <th></th>
                                 <th onclick="sortTable('employee')">Employee <i class="fas fa-sort"></i></th>
+                                <th>Department</th>
+                                <th>Position</th>
+                                <th>Status</th>
                                 <th onclick="sortTable('pay_period')">Pay Period <i class="fas fa-sort"></i></th>
                                 <th onclick="sortTable('gross_salary')">Gross Salary <i class="fas fa-sort"></i></th>
-                                <th class="deductions-col" onclick="sortTable('deductions')">Deductions <i class="fas fa-sort"></i></th>
-                                <th class="net_salary-col" onclick="sortTable('net_salary')">Net Salary <i class="fas fa-sort"></i></th>
-                                <th>Status</th>
+                                <th class="deductions-col" onclick="sortTable('deductions')">Deductions <i
+                                        class="fas fa-sort"></i></th>
+                                <th class="net_salary-col" onclick="sortTable('net_salary')">Net Salary <i
+                                        class="fas fa-sort"></i></th>
+                                <th>Payslip Status</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
@@ -1026,38 +1130,48 @@
                             <tr>
                                 <td><input type="checkbox" class="row-checkbox"></td>
                                 <td>{{ payslip.employee.fname }} {{ payslip.employee.lname }}</td>
-                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d, Y" }}</td>
+                                <td>{{ payslip.employee.department }}</td>
+                                <td>{{ payslip.employee.employee_profession }}</td>
+                                <td>
+                                    <span class="employee-status status-{{ payslip.employee.status|lower }}">
+                                        {{ payslip.employee.status }}
+                                    </span>
+                                </td>
+                                <td>{{ payslip.pay_period_start|date:"M d, Y" }} - {{ payslip.pay_period_end|date:"M d,
+                                    Y" }}</td>
                                 <td>${{ payslip.gross_salary|floatformat:2 }}</td>
                                 <td class="deductions-col">
                                     ${{ payslip.total_deductions|floatformat:2 }}
                                     <button class="action-btn" onclick="expandRow(this)">Details</button>
                                     <div class="deduction-details" style="display:none;">
-                                        <!-- Render deduction details here -->
                                         {% for d in payslip.deductions.all %}
-                                            <div>{{ d.name }}: ${{ d.amount|floatformat:2 }}</div>
+                                        <div>{{ d.name }}: ${{ d.amount|floatformat:2 }}</div>
                                         {% endfor %}
                                     </div>
                                 </td>
                                 <td class="net_salary-col">${{ payslip.net_salary|floatformat:2 }}</td>
                                 <td>
                                     <span class="status-{{ payslip.status|lower }}">
-                                        <i class="fas {% if payslip.status == 'Paid' %}fa-check-circle{% elif payslip.status == 'Draft' %}fa-pencil-alt{% elif payslip.status == 'Generated' %}fa-file-alt{% elif payslip.status == 'Sent' %}fa-paper-plane{% endif %}"></i>
+                                        <i
+                                            class="fas {% if payslip.status == 'Paid' %}fa-check-circle{% elif payslip.status == 'Draft' %}fa-pencil-alt{% elif payslip.status == 'Generated' %}fa-file-alt{% elif payslip.status == 'Sent' %}fa-paper-plane{% endif %}"></i>
                                         {{ payslip.status }}
                                     </span>
                                     <button class="action-btn" onclick="changeStatus(this)">Change</button>
                                 </td>
                                 <td>
-                                    <a href="#" class="action-link" onclick="previewPayslip({{ payslip.id }})">Preview</a>
+                                    <a href="#" class="action-link"
+                                        onclick="previewPayslip({{ payslip.id }})">Preview</a>
                                     <a href="#" class="action-link" onclick="sendPayslip({{ payslip.id }})">Send</a>
                                     <a href="#" class="action-link" onclick="downloadPDF({{ payslip.id }})">PDF</a>
-                                    <a href="#" class="action-link" onclick="regeneratePayslip({{ payslip.id }})">Regenerate</a>
+                                    <a href="#" class="action-link"
+                                        onclick="regeneratePayslip({{ payslip.id }})">Regenerate</a>
                                     <a href="#" class="action-link" onclick="editPayslip({{ payslip.id }})">Edit</a>
                                     <a href="#" class="action-link" onclick="deletePayslip({{ payslip.id }})">Delete</a>
                                 </td>
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="8">No payslips found.</td>
+                                <td colspan="11">No payslips found.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -1128,4 +1242,5 @@
         });
     </script>
 </body>
+
 </html>
