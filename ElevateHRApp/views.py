@@ -319,7 +319,7 @@ def payslip_list(request):
     }
     return render(request, 'payslip_list.html', context)
 
-
+@csrf_exempt
 @require_POST
 def generate_payslip(request):
     form = PayslipForm(request.POST)
