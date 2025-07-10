@@ -383,7 +383,6 @@
       }
 
       /* Floating Chatbot */
-      /* Floating Chatbot */
       .chatbot-container {
         position: fixed;
         bottom: 30px;
@@ -618,7 +617,8 @@
             </div>
 
             <div class="form-content">
-              <form id="campaignForm">
+              <form id="campaignForm" method="POST">
+                {% csrf_token %}
                 <div class="form-group">
                   <label for="jobTitle">Job Title *</label>
                   <input
@@ -880,31 +880,31 @@
       });
 
       // Form submission
-      document
-        .getElementById("campaignForm")
-        .addEventListener("submit", (e) => {
-          e.preventDefault();
+      // document
+      //   .getElementById("campaignForm")
+      //   .addEventListener("submit", (e) => {
+      //     e.preventDefault();
 
-          const formData = new FormData(e.target);
-          const data = Object.fromEntries(formData.entries());
+      //     const formData = new FormData(e.target);
+      //     const data = Object.fromEntries(formData.entries());
 
-          console.log("Campaign Data:", data);
-          alert(
-            "Campaign created successfully! Check the console for form data."
-          );
-        });
+      //     console.log("Campaign Data:", data);
+      //     alert(
+      //       "Campaign created successfully! Check the console for form data."
+      //     );
+      //   });
 
-      // Form validation feedback
-      const inputs = document.querySelectorAll("input, select, textarea");
-      inputs.forEach((input) => {
-        input.addEventListener("blur", () => {
-          if (input.hasAttribute("required") && !input.value.trim()) {
-            input.style.borderColor = "hsl(0, 84.2%, 60.2%)";
-          } else {
-            input.style.borderColor = "hsl(240, 5.9%, 90%)";
-          }
-        });
-      });
+      // // Form validation feedback
+      // const inputs = document.querySelectorAll("input, select, textarea");
+      // inputs.forEach((input) => {
+      //   input.addEventListener("blur", () => {
+      //     if (input.hasAttribute("required") && !input.value.trim()) {
+      //       input.style.borderColor = "hsl(0, 84.2%, 60.2%)";
+      //     } else {
+      //       input.style.borderColor = "hsl(240, 5.9%, 90%)";
+      //     }
+      //   });
+      // });
     </script>
   </body>
 </html>

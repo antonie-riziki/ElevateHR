@@ -1,3 +1,13 @@
+
+from .forms import PayslipForm
+from .models import *
+from uuid import UUID
+from django.core.files.storage import FileSystemStorage
+from django.http import JsonResponse, HttpResponse
+from django.views.decorators.http import require_POST
+from django.views.decorators.csrf import csrf_exempt
+from django.contrib import messages
+from django.shortcuts import render, redirect, get_object_or_404
 import africastalking
 import os
 import sys
@@ -7,29 +17,17 @@ import json
 import shutil
 import tempfile
 import google.generativeai as genai
-
 from dotenv import load_dotenv
 
 load_dotenv()
+
 sys.path.insert(1, './ElevateHRApp')
 
-from django.shortcuts import render, redirect, get_object_or_404
-from django.contrib import messages
-from django.views.decorators.csrf import csrf_exempt
-from django.views.decorators.http import require_POST
-from django.http import JsonResponse, HttpResponse
-from django.core.files.storage import FileSystemStorage
-
-from uuid import UUID
-
 from rag_model import get_qa_chain, query_system
-
-
-from .models import *
-from .forms import PayslipForm
+from image_generation import google_image_generator
 
 # Initialize Africa's Talking and Google Generative AI
-genai.configure(api_key = os.getenv("GOOGLE_API_KEY"))
+genai.configure(api_key=os.getenv("GOOGLE_API_KEY"))
 africastalking.initialize(
     username="EMID",
     api_key=os.getenv("AT_API_KEY")
@@ -54,7 +52,7 @@ def send_otp(phone_number, otp_sms):
     recipients = [f"+254{str(phone_number)}"]
 
     # Set your message
-    message = f"{otp_sms}";
+    message = f"{otp_sms}"
 
     # Set your shortCode or senderId
     sender = 20880
@@ -73,7 +71,7 @@ def welcome_message(first_name, phone_number):
     recipients = [f"+254{str(phone_number)}"]
 
     # Set your message
-    message = f"{first_name}, Welcome to ElevateHR! Your account is now active. Lets streamline HR tasks together.";
+    message = f"{first_name}, Welcome to ElevateHR! Your account is now active. Lets streamline HR tasks together."
 
     # Set your shortCode or senderId
     sender = 20880
@@ -114,9 +112,7 @@ def get_gemini_response(prompt):
         - Don't provide legal or financial advice.
         - Don't engage in casual conversation unrelated to HR, Employee, Managerial, Employer or Work Environment topics.
         
-        """
-
-    )
+        """)
 
     response = model.generate_content(
         prompt,
@@ -149,7 +145,8 @@ def process_candidates(request):
             result = query_system(prompt, qa_chain)
 
             # Return result as HTML or Markdown
-            return HttpResponse(result, content_type='text/html')  # or text/markdown
+            # or text/markdown
+            return HttpResponse(result, content_type='text/html')
         except Exception as e:
             return HttpResponse(f"<strong>Error:</strong> {str(e)}", status=500)
         finally:
@@ -189,13 +186,14 @@ def send_otp_view(request):
         welcome_message(first_name, phone)
 
         send_otp(phone, otp_code)
-        
+
         # if get_otp_code:
         #     welcome_message(first_name, phone)
 
         return JsonResponse({'status': 'OTP sent', 'phone': phone})
-    
+
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
 
 @csrf_exempt
 def verify_otp_view(request):
@@ -207,7 +205,8 @@ def verify_otp_view(request):
 
         if saved and saved['otp'] == entered_otp:
             welcome_message(first_name, phone)
-            messages.success(request, "Registration successful! Welcome to ElevateHR.")
+            messages.success(
+                request, "Registration successful! Welcome to ElevateHR.")
             return redirect('home')  # or your actual home page
         else:
             messages.error(request, "Invalid OTP. Please try again.")
@@ -220,19 +219,21 @@ def chatbot_response(request):
     if request.method == 'POST':
         data = json.loads(request.body)
         user_message = data.get('message', '')
-        
+
         if user_message:
             bot_reply = get_gemini_response(user_message)
             return JsonResponse({'response': bot_reply})
         else:
             return JsonResponse({'response': "Sorry, I didn't catch that."}, status=400)
-        
+
 
 def login(request):
     return render(request, 'login.html')
 
+
 def index(request):
     return render(request, 'index.html')
+
 
 def employees(request):
     emp = Employee.objects.all()
@@ -241,41 +242,83 @@ def employees(request):
     }
     return render(request, 'employees.html', context)
 
+
 def employee_dashboard(request, employee_ID):
     emp_dash = get_object_or_404(Employee, employee_ID=employee_ID)
-    context = { 
+    context = {
         'emp_dash': emp_dash,
     }
     return render(request, 'employee-dashboard.html', context)
 
-def recruitment(request):
-    return render(request, 'recruitment.html')
+@csrf_exempt
+def campaign(request):
+    if request.method == 'POST':
+        campaign_data = {
+            "job_title": request.POST.get("jobTitle"),
+            "level": request.POST.get("level"),
+            "experience": request.POST.get("experience"),
+            "salary_range": request.POST.get("salaryRange"),
+            "description": request.POST.get("description"),
+            "requirements": request.POST.get("requirements"),
+            "contact_email": request.POST.get("email"),
+            "company_website": request.POST.get("website"),
+        }
+
+        # Generate prompt string from campaign data
+        prompt = f"""
+        Create a poster for the position of {campaign_data['job_title']} at {campaign_data['company_website']}.
+        Level: {campaign_data['level']}, Experience: {campaign_data['experience']}, Salary: {campaign_data['salary_range']}.
+        Description: {campaign_data['description']}.
+        Requirements: {campaign_data['requirements']}.
+        """
+
+        # Call your image generator
+        generated_image = google_image_generator(prompt)
+
+        return render(request, 'campaign.html', {
+            "campaign": campaign_data,
+            "generated_image": generated_image,
+        })
+    return render(request, 'campaign.html')
+
 
 def job_posting(request):
     return render(request, 'job_posting.html')
 
-def campaign(request):
-    return render(request, 'campaign.html')
+
+def recruitment(request):
+    return render(request, 'recruitment.html')
+
 
 def time_attendance(request):
     return render(request, 'time_attendance.html')
 
+
 def leave_management(request):
     return render(request, 'leave_management.html')
+
 
 def reporting_analytics(request):
     return render(request, 'reporting_analytics.html')
 
+
 def performance(request):
     return render(request, 'performance.html')
+
 
 def performance_management(request):
     return render(request, 'performance.html')
 
+
 def payslip_list(request):
     payslips = Payslip.objects.select_related('employee').all()
     employees = Employee.objects.all()
-    return render(request, 'payslip_list.html', {'payslips': payslips, 'employees': employees})
+    context = {
+        'payslips': payslips,
+        'employees': employees
+    }
+    return render(request, 'payslip_list.html', context)
+
 
 @require_POST
 def generate_payslip(request):
@@ -303,7 +346,3 @@ def generate_payslip(request):
         })
     else:
         return JsonResponse({'success': False, 'errors': form.errors}, status=400)
-
-
-
-

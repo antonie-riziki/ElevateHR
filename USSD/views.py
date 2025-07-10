@@ -42,15 +42,21 @@ def index(request):
             response = "END Your leave is pending review"
 
         elif text == "4":
-            response = "END You have had an average performance. \n
-                         For the full report, find it on your profile"
+            response = """
+            END You have had an average performance. \n
+            For the full report, find it on your profile
+            """
 
         elif text == "5":
-            response = "END Your payment summary is ready.\n
-            Login to your profile to read the full summary"
+            response = """
+            END Your payment summary is ready.\n
+            Login to your profile to read the full summary
+            """
 
         elif text == "6":
-            response = "END The Documents are ready. \n 
-            Visit your profile to download"
+            response = """
+            END The Documents are ready. \n 
+            Visit your profile to download
+            """
 
         return HttpResponse(response)
