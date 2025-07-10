@@ -254,6 +254,9 @@ def recruitment(request):
 def job_posting(request):
     return render(request, 'job_posting.html')
 
+def campaign(request):
+    return render(request, 'campaign.html')
+
 def time_attendance(request):
     return render(request, 'time_attendance.html')
 
