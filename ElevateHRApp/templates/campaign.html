@@ -723,9 +723,13 @@
             </div>
 
             <div class="image-placeholder">
-              <div>Campaign Poster Placeholder</div>
-              <small>Upload your campaign image here</small>
-            </div>
+              {% if generated_image %}
+                <img src="data:image/png;base64,{{ generated_image }}" alt="Generated Campaign Poster" style="max-width: 100%; height: auto;">
+              {% else %}
+                <div>Campaign Poster Placeholder</div>
+                <small>Upload your campaign image here</small>
+              {% endif %}
+            </div>            
 
             <div class="tips-card">
               <h4>✨ Pro Tips</h4>
