@@ -18,70 +18,19 @@ import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
-import gc  # For garbage collection
 
-# Configure logging to be less verbose
-logging.basicConfig(
-    level=logging.WARNING,  # Change from INFO to WARNING
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
+# Configure logging
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Flask app configuration
-app = Flask(__name__)
-app.config['JSON_AS_ASCII'] = False
-app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit payload size to 16MB
-
-# Load environment variables
 load_dotenv()
+app = Flask(__name__)
 
 # Environment variables
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
-ADMIN_PHONE = os.getenv("ADMIN_PHONE", "whatsapp:+1234567890")
-
-# Session configuration
-SESSION_TIMEOUT_MINUTES = 30
-MAX_SESSIONS = 1000  # Limit maximum concurrent sessions
-MAX_CONVERSATION_HISTORY = 3  # Limit conversation history size
-
-# Database connection pool
-def get_db_connection():
-    conn = sqlite3.connect('hr_bot.db', timeout=30)
-    conn.row_factory = sqlite3.Row
-    return conn
-
-# Periodic cleanup function
-def cleanup_old_sessions():
-    """Remove expired sessions to free up memory."""
-    try:
-        current_time = datetime.now()
-        expired_sessions = []
-        
-        for phone_number, session in user_sessions.items():
-            if (current_time - session['last_active']) > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
-                expired_sessions.append(phone_number)
-        
-        for phone_number in expired_sessions:
-            del user_sessions[phone_number]
-            
-        # Force garbage collection
-        gc.collect()
-        
-    except Exception as e:
-        logging.error(f"Error in cleanup_old_sessions: {e}")
-
-# Schedule periodic cleanup
-def run_cleanup_scheduler():
-    """Run cleanup tasks periodically."""
-    while True:
-        cleanup_old_sessions()
-        time.sleep(300)  # Run every 5 minutes
-
-# Start cleanup thread
-cleanup_thread = threading.Thread(target=run_cleanup_scheduler, daemon=True)
-cleanup_thread.start()
+ADMIN_PHONE = os.getenv("ADMIN_PHONE", "whatsapp:+1234567890")  # Admin phone for notifications
 
 # Initialize Twilio client
 if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
@@ -184,7 +133,7 @@ class Priority(Enum):
 # Database initialization
 def init_database():
     """Initialize SQLite database with enhanced schema."""
-    conn = get_db_connection()
+    conn = sqlite3.connect('hr_bot.db')
     cursor = conn.cursor()
     
     # Employees table
@@ -309,7 +258,7 @@ class DatabaseManager:
         self.db_path = 'hr_bot.db'
     
     def get_connection(self):
-        return get_db_connection()
+        return sqlite3.connect(self.db_path)
     
     def save_employee(self, employee: Employee):
         """Save or update employee record."""
@@ -778,60 +727,17 @@ class FormHandler:
 form_handler = FormHandler()
 
 # Enhanced message processing
-# Initialize managers
-db_manager = DatabaseManager()
-session_manager = SessionManager()
-menu_manager = MenuManager()
-notification_prompt = NotificationPrompt(db_manager)
-
 def process_message(phone_number: str, message: str) -> str:
-    """Process incoming message with enhanced logic."""
+    """Process incoming WhatsApp messages."""
+    start_time = time.time()
+    session = get_user_session(phone_number)
+    
     try:
-        session = session_manager.get_session(phone_number)
-        
-        # Handle notification settings
-        if message.lower() == 'notifications':
-            if not session.get('employee_id'):
-                return "Please provide your Employee ID first to manage notifications."
-            session['state'] = 'notification_settings'
-            return notification_prompt.get_settings_menu(session['employee_id'])
-        
-        # Handle notification setting updates
-        if session.get('state') == 'notification_settings':
-            if message in NotificationPrompt.NOTIFICATION_TYPES:
-                setting_type = NotificationPrompt.NOTIFICATION_TYPES[message]
-                settings = NotificationPrompt.NOTIFICATION_SETTINGS[setting_type]
-                session['current_setting'] = setting_type
-                session['state'] = 'notification_value'
-                return f"*{settings['name']}*\n\n{settings['description']}\n\nChoose frequency:\n{', '.join(settings['frequency'])}"
-            elif message.lower() == 'menu':
-                session['state'] = 'main_menu'
-                return menu_manager.get_menu_text("MAIN_MENU")
-            return "Please select a valid option (1-5) or type 'menu' to go back."
-        
-        if session.get('state') == 'notification_value':
-            setting_type = session.get('current_setting')
-            if setting_type:
-                response = notification_prompt.handle_setting_update(session['employee_id'], setting_type, message.lower())
-                session['state'] = 'notification_settings'
-                return response
-        
         # Get employee info if available
         employee = db_manager.get_employee_by_phone(phone_number)
         employee_id = employee.employee_id if employee else None
         
-        # Handle menu commands
-        if message.lower() in ['menu', 'start', 'hi', 'hello', 'hey']:
-            session['state'] = 'main_menu'
-            return menu_manager.get_menu_text("MAIN_MENU")
-        
-        # Handle menu selections
-        if session.get('state') == 'main_menu' and message.isdigit():
-            response, updated_session = menu_manager.handle_menu_action(session, message)
-            session.update(updated_session)
-            return response
-        
-        # Log message and continue with existing logic
+        # Log incoming message
         db_manager.log_message(
             phone_number=phone_number,
             employee_id=employee_id,
@@ -841,15 +747,97 @@ def process_message(phone_number: str, message: str) -> str:
             response_time=0
         )
         
-        # Continue with existing message processing...
-        return "I'm processing your message..."
+        # Check for menu navigation or exit
+        if message.lower() in ["menu", "main", "start"]:
+            session.clear()
+            response = menu_manager.get_menu_text("MAIN_MENU")
+            update_user_session(phone_number, current_menu="MAIN_MENU")
+            return response
+            
+        if message.lower() in ["exit", "quit", "bye"]:
+            session.clear()
+            return "👋 Thank you for using ElevateHR Bot. Have a great day!"
+        
+        # Handle active forms if any
+        if "form_type" in session:
+            form_type = session["form_type"]
+            if form_type == "leave_request":
+                response, is_complete = form_handler.handle_leave_request(session, message)
+                if is_complete:
+                    session.pop("form_type")
+                    response += "\n\n" + menu_manager.get_menu_text(session.get("current_menu", "MAIN_MENU"))
+                update_user_session(phone_number, **session)
+                return response
+            elif form_type == "support_ticket":
+                response, is_complete = form_handler.handle_support_ticket(session, message)
+                if is_complete:
+                    session.pop("form_type")
+                    response += "\n\n" + menu_manager.get_menu_text(session.get("current_menu", "MAIN_MENU"))
+                update_user_session(phone_number, **session)
+                return response
+        
+        # Handle menu navigation
+        if "current_menu" in session:
+            response, updated_session = menu_manager.handle_menu_action(session, message)
+            
+            # Handle specific actions
+            action = updated_session.get("current_action")
+            if action:
+                if employee_id:
+                    if action in ["view_profile", "update_info", "view_payslips", "view_attendance", "view_benefits"]:
+                        response = employee_service.handle_action(action, employee_id)
+                    elif action in ["attendance_report", "leave_report", "performance_report"]:
+                        response = reporting_service.handle_report_action(action, employee_id)
+                    elif action == "request_leave":
+                        session["form_type"] = "leave_request"
+                        session["step"] = 1
+                        response = form_handler.handle_leave_request(session, "")[0]
+                    elif action == "create_ticket":
+                        session["form_type"] = "support_ticket"
+                        session["step"] = 1
+                        response = form_handler.handle_support_ticket(session, "")[0]
+                else:
+                    response = "⚠️ Please register as an employee first to access this feature."
+            
+            update_user_session(phone_number, **updated_session)
+            return response
+        
+        # Handle natural language queries with AI
+        context = get_conversation_context(phone_number)
+        ai_response = get_gemini_response(message, context)
+        
+        # Log response time
+        response_time = time.time() - start_time
+        db_manager.log_message(
+            phone_number=phone_number,
+            employee_id=employee_id,
+            message_type="outgoing",
+            message_content=message,
+            response_content=ai_response,
+            response_time=response_time
+        )
+        
+        # Log analytics
+        db_manager.log_analytics(
+            event_type="message_processed",
+            event_data={
+                "response_time": response_time,
+                "message_length": len(message),
+                "response_length": len(ai_response)
+            },
+            phone_number=phone_number,
+            employee_id=employee_id
+        )
+        
+        return ai_response
         
     except Exception as e:
         logging.error(f"Error processing message: {e}")
-        return "Sorry, I encountered an error. Please try again or contact support."
+        return "❌ Sorry, I encountered an error. Please try again or type 'menu' to start over."
 
 # User session storage (WARNING: NOT PRODUCTION READY - use a database like Redis/PostgreSQL for persistence)
 user_sessions = {}
+SESSION_TIMEOUT_MINUTES = 30 # Session will expire after 30 minutes of inactivity
 
 # HR Knowledge Base (kept as is, assume it's comprehensive enough for context)
 HR_KNOWLEDGE_BASE = """
@@ -1048,26 +1036,19 @@ def send_main_menu(to_number):
         return False
 
 def get_user_session(phone_number):
-    """Get or create user session with memory limits."""
+    """Get or create user session, and manage session timeout."""
     now = datetime.now()
-    
-    # Check session limit
-    if phone_number not in user_sessions and len(user_sessions) >= MAX_SESSIONS:
-        # Remove oldest session if limit reached
-        oldest_number = min(user_sessions.keys(), key=lambda k: user_sessions[k]['last_active'])
-        del user_sessions[oldest_number]
-    
     if phone_number not in user_sessions or \
        (now - user_sessions[phone_number]['last_active']) > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
+        logging.info(f"Initializing or resetting session for {phone_number}")
         user_sessions[phone_number] = {
-            'state': 'initial',
+            'state': 'initial', # 'initial', 'ai_mode', 'awaiting_employee_id', 'payroll_inquiry', etc.
             'last_action': None,
             'employee_id': None,
             'conversation_history': [],
             'last_active': now
         }
-    
-    user_sessions[phone_number]['last_active'] = now
+    user_sessions[phone_number]['last_active'] = now # Update last active timestamp
     return user_sessions[phone_number]
 
 def update_user_session(phone_number, **kwargs):
@@ -1080,17 +1061,16 @@ def update_user_session(phone_number, **kwargs):
             logging.warning(f"Attempted to update non-existent session key: {key} for {phone_number}")
 
 def add_to_conversation_history(phone_number, user_message, bot_response):
-    """Add message to conversation history with size limit."""
+    """Add message to conversation history for context."""
     session = get_user_session(phone_number)
     session['conversation_history'].append({
-        'user': user_message[:500],  # Limit message size
-        'bot': bot_response[:1000],  # Limit response size
+        'user': user_message,
+        'bot': bot_response,
         'timestamp': datetime.now().isoformat()
     })
-    
-    # Keep only recent conversations
-    if len(session['conversation_history']) > MAX_CONVERSATION_HISTORY:
-        session['conversation_history'] = session['conversation_history'][-MAX_CONVERSATION_HISTORY:]
+    # Keep only last 3 conversations (user query + bot response pairs) for context to manage token limits
+    if len(session['conversation_history']) > 3:
+        session['conversation_history'] = session['conversation_history'][-3:]
 
 def get_conversation_context(phone_number):
     """Generate a context string from the session history for the AI."""
@@ -1156,11 +1136,9 @@ class MenuManager:
     }
     
     PROFILE_MENU = {
-        "1": {"name": "View Profile", "action": "view_profile"},
-        "2": {"name": "Update Information", "action": "update_info"},
+        "1": {"name": "Change Password", "action": "change_password"},
+        "2": {"name": "Update Contact Info", "action": "update_contact"},
         "3": {"name": "Notification Settings", "action": "notification_settings"},
-        "4": {"name": "Change Password", "action": "change_password"},
-        "5": {"name": "Privacy Settings", "action": "privacy_settings"},
         "9": {"name": "Back to Main Menu", "action": "main_menu"},
         "0": {"name": "Exit", "action": "exit"}
     }
@@ -1447,121 +1425,213 @@ class ReportingService:
 # Initialize reporting service
 reporting_service = ReportingService(db_manager)
 
-class NotificationPrompt:
-    """Handles notification preferences and settings prompts."""
+class NotificationService:
+    """Handles automated notifications and reminders."""
     
-    NOTIFICATION_TYPES = {
-        "1": "leave_updates",
-        "2": "ticket_updates",
-        "3": "daily_summary",
-        "4": "reminders",
-        "5": "announcements"
-    }
-    
-    NOTIFICATION_SETTINGS = {
-        "leave_updates": {
-            "name": "Leave Request Updates",
-            "description": "Updates about your leave requests status",
-            "frequency": ["instant", "daily"],
-            "default": "instant"
-        },
-        "ticket_updates": {
-            "name": "Support Ticket Updates",
-            "description": "Updates about your support tickets",
-            "frequency": ["instant", "daily"],
-            "default": "instant"
-        },
-        "daily_summary": {
-            "name": "Daily Summary",
-            "description": "Daily summary of your pending items and tasks",
-            "frequency": ["morning", "evening", "both", "off"],
-            "default": "evening"
-        },
-        "reminders": {
-            "name": "Task Reminders",
-            "description": "Reminders for pending tasks and deadlines",
-            "frequency": ["1_day_before", "3_days_before", "1_week_before", "off"],
-            "default": "1_day_before"
-        },
-        "announcements": {
-            "name": "Company Announcements",
-            "description": "Important company-wide announcements",
-            "frequency": ["instant", "daily", "off"],
-            "default": "instant"
-        }
-    }
-    
-    def __init__(self, db_manager: DatabaseManager):
+    def __init__(self, db_manager: DatabaseManager, twilio_client: Optional[Client] = None):
         self.db = db_manager
+        self.twilio_client = twilio_client
+        
+        # Start the notification scheduler in a separate thread
+        self.scheduler_thread = threading.Thread(target=self._run_scheduler, daemon=True)
+        self.scheduler_thread.start()
     
-    def get_settings_menu(self, employee_id: str) -> str:
-        """Get notification settings menu."""
-        current_settings = self._get_user_settings(employee_id)
+    def _run_scheduler(self):
+        """Run the scheduler for periodic tasks."""
+        # Schedule daily tasks
+        schedule.every().day.at("09:00").do(self.send_daily_reminders)
+        schedule.every().day.at("17:00").do(self.send_end_day_reminders)
         
-        menu = "🔔 *Notification Settings*\n\n"
-        menu += "Choose a notification type to configure:\n\n"
+        # Schedule weekly tasks
+        schedule.every().monday.at("09:30").do(self.send_weekly_updates)
         
-        for key, notif_type in self.NOTIFICATION_TYPES.items():
-            settings = self.NOTIFICATION_SETTINGS[notif_type]
-            current = current_settings.get(notif_type, settings['default'])
-            menu += f"{key}. {settings['name']}\n"
-            menu += f"   Current: {current}\n\n"
+        # Schedule monthly tasks
+        schedule.every().day.at("00:01").do(self.check_monthly_tasks)
         
-        menu += "\nType a number (1-5) to configure, or 'menu' to go back."
-        return menu
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
     
-    def handle_setting_update(self, employee_id: str, setting_type: str, new_value: str) -> str:
-        """Handle notification setting update."""
-        if setting_type not in self.NOTIFICATION_SETTINGS:
-            return "❌ Invalid notification type. Please try again."
-        
-        settings = self.NOTIFICATION_SETTINGS[setting_type]
-        if new_value not in settings['frequency']:
-            return f"❌ Invalid value. Please choose from: {', '.join(settings['frequency'])}"
-        
-        self._update_user_settings(employee_id, setting_type, new_value)
-        
-        return f"✅ Updated {settings['name']} to: {new_value}\n\nType 'notifications' to see all settings."
-    
-    def _get_user_settings(self, employee_id: str) -> dict:
-        """Get user's notification settings from database."""
+    def send_notification(self, phone_number: str, message: str, priority: str = "normal") -> bool:
+        """Send a WhatsApp notification to a user."""
+        if not self.twilio_client:
+            logging.warning("Twilio client not initialized. Notification not sent.")
+            return False
+            
         try:
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('''
-                SELECT notification_settings
-                FROM user_sessions
-                WHERE phone_number = ?
-            ''', (employee_id,))
-            result = cursor.fetchone()
-            conn.close()
+            self.twilio_client.messages.create(
+                from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
+                body=message,
+                to=f"whatsapp:{phone_number}"
+            )
             
-            if result and result[0]:
-                return json.loads(result[0])
-            return {}
+            # Log the notification
+            self.db.log_analytics(
+                event_type="notification_sent",
+                event_data={
+                    "priority": priority,
+                    "message_length": len(message)
+                },
+                phone_number=phone_number,
+                employee_id=None  # Can be updated if employee mapping is available
+            )
+            return True
             
-        except Exception as e:
-            logging.error(f"Error getting notification settings: {e}")
-            return {}
+        except TwilioRestException as e:
+            logging.error(f"Failed to send notification: {e}")
+            return False
     
-    def _update_user_settings(self, employee_id: str, setting_type: str, value: str):
-        """Update user's notification settings in database."""
+    def send_daily_reminders(self):
+        """Send daily reminders and notifications."""
+        # Get all active employees
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
         try:
-            current_settings = self._get_user_settings(employee_id)
-            current_settings[setting_type] = value
+            # Check for pending leave requests
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name, COUNT(l.id) as pending_count
+                FROM employees e
+                JOIN leave_requests l ON e.employee_id = l.employee_id
+                WHERE l.status = 'pending'
+                GROUP BY e.employee_id
+                HAVING pending_count > 0
+            """)
             
-            conn = get_db_connection()
-            cursor = conn.cursor()
-            cursor.execute('''
-                UPDATE user_sessions
-                SET session_data = ?
-                WHERE phone_number = ?
-            ''', (json.dumps(current_settings), employee_id))
-            conn.commit()
+            for phone, name, count in cursor.fetchall():
+                message = (
+                    f"🔔 Good morning {name}!\n\n"
+                    f"You have {count} pending leave request(s) awaiting approval."
+                )
+                self.send_notification(phone, message)
+            
+            # Check for upcoming deadlines
+            today = datetime.now().date()
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name
+                FROM employees e
+                WHERE e.status = 'active'
+                AND EXISTS (
+                    SELECT 1 FROM tasks t
+                    WHERE t.employee_id = e.employee_id
+                    AND t.deadline = ?
+                    AND t.status != 'completed'
+                )
+            """, (today.isoformat(),))
+            
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"⚠️ Hi {name}!\n\n"
+                    "You have tasks due today. Please check your dashboard."
+                )
+                self.send_notification(phone, message, priority="high")
+                
+        finally:
+            cursor.close()
             conn.close()
+    
+    def send_end_day_reminders(self):
+        """Send end-of-day reminders."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Check for missing time logs
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name
+                FROM employees e
+                WHERE e.status = 'active'
+                AND NOT EXISTS (
+                    SELECT 1 FROM time_logs t
+                    WHERE t.employee_id = e.employee_id
+                    AND t.log_date = ?
+                )
+            """, (datetime.now().date().isoformat(),))
             
-        except Exception as e:
-            logging.error(f"Error updating notification settings: {e}")
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"⏰ Hi {name}!\n\n"
+                    "Don't forget to log your time for today."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def send_weekly_updates(self):
+        """Send weekly performance and task updates."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Get active employees
+            cursor.execute("SELECT employee_id, phone_number, first_name FROM employees WHERE status = 'active'")
+            employees = cursor.fetchall()
+            
+            for emp_id, phone, name in employees:
+                # Generate weekly summary
+                message = (
+                    f"📊 Weekly Update for {name}\n\n"
+                    "Performance Highlights:\n"
+                    "- Tasks Completed: 12\n"
+                    "- On-time Completion: 95%\n"
+                    "- Upcoming Deadlines: 3\n\n"
+                    "Click here to view detailed report."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def check_monthly_tasks(self):
+        """Check and send notifications for monthly tasks."""
+        today = datetime.now()
+        
+        # Only run on the first day of the month
+        if today.day != 1:
+            return
+            
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Notify managers about performance reviews
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name, 
+                       (SELECT COUNT(*) FROM employees e2 WHERE e2.manager_id = e.employee_id) as team_size
+                FROM employees e
+                WHERE e.role = 'manager'
+                AND e.status = 'active'
+            """)
+            
+            for phone, name, team_size in cursor.fetchall():
+                message = (
+                    f"📋 Hi {name}!\n\n"
+                    f"Monthly reminder: You have {team_size} team member(s) "
+                    "due for performance review this month."
+                )
+                self.send_notification(phone, message)
+            
+            # Remind employees about timesheet submission
+            cursor.execute("""
+                SELECT phone_number, first_name
+                FROM employees
+                WHERE status = 'active'
+            """)
+            
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"📅 Hi {name}!\n\n"
+                    "Monthly reminder: Please submit your timesheet "
+                    "for the previous month by end of day."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
 
 # Initialize notification service
 notification_service = NotificationService(db_manager, client)
