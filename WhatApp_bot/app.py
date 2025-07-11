@@ -159,7 +159,7 @@ def init_database():
             phone_number TEXT PRIMARY KEY,
             session_data TEXT,
             last_active TEXT,
-            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP
         )
     ''')
     
@@ -851,7 +851,7 @@ LEAVE POLICY:
 - Paternity leave: 4 weeks paid
 - Bereavement leave: 5 days paid
 - Leave applications must be submitted 2 weeks in advance (except sick leave)
-- Portal link: https://company-portal.com/leave-application
+- Portal link: https://elevatehr.com/leave-application
 
 PAYROLL INFORMATION:
 - Pay date: 25th of each month
