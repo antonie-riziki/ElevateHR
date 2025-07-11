@@ -11,6 +11,13 @@ from google.generativeai.types import HarmCategory, HarmBlockThreshold
 from datetime import datetime, timedelta
 import re
 import logging
+import sqlite3
+from typing import Dict, List, Optional
+import schedule
+import threading
+import time
+from dataclasses import dataclass
+from enum import Enum
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -23,6 +30,7 @@ TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
+ADMIN_PHONE = os.getenv("ADMIN_PHONE", "whatsapp:+1234567890")  # Admin phone for notifications
 
 # Initialize Twilio client
 if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
@@ -31,19 +39,15 @@ if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
 else:
     client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
 
-# Replace the Gemini model initialization section (around line 40-55) with this:
-
-# Initialize Gemini AI
+# Initialize Gemini AI with enhanced error handling
 if not GEMINI_API_KEY:
     logging.error("GOOGLE_API_KEY not set. AI features will not work.")
     model = None
 else:
     genai.configure(api_key=GEMINI_API_KEY)
     try:
-        # Updated model name - try these in order of preference
         model_names = [
-            'gemini-1.5-flash',
-            'gemini-1.5-pro', 
+            'gemini-1.5-pro',
             'gemini-1.0-pro',
             'gemini-pro'
         ]
@@ -67,19 +71,769 @@ else:
                 continue
         
         if model is None:
-            logging.error("Failed to initialize any Gemini model. Listing available models...")
-            try:
-                available_models = genai.list_models()
-                logging.info("Available models:")
-                for m in available_models:
-                    if 'generateContent' in m.supported_generation_methods:
-                        logging.info(f"  - {m.name}")
-            except Exception as e:
-                logging.error(f"Could not list available models: {e}")
+            logging.error("Failed to initialize any Gemini model.")
                 
     except Exception as e:
         logging.error(f"Failed to configure Gemini API: {e}")
         model = None
+
+# Enhanced data structures
+@dataclass
+class Employee:
+    employee_id: str
+    first_name: str
+    last_name: str
+    department: str
+    position: str
+    email: str
+    phone_number: str
+    join_date: str
+    status: str = "active"
+    created_at: str = None
+    
+    def __post_init__(self):
+        if self.created_at is None:
+            self.created_at = datetime.now().isoformat()
+
+@dataclass
+class LeaveRequest:
+    employee_id: str
+    leave_type: str
+    start_date: str
+    end_date: str
+    reason: str
+    status: str = "pending"
+    created_at: str = None
+    
+    def __post_init__(self):
+        if self.created_at is None:
+            self.created_at = datetime.now().isoformat()
+
+@dataclass
+class Ticket:
+    ticket_id: str
+    employee_id: str
+    category: str
+    subject: str
+    description: str
+    priority: str = "medium"
+    status: str = "open"
+    created_at: str = None
+    
+    def __post_init__(self):
+        if self.created_at is None:
+            self.created_at = datetime.now().isoformat()
+
+class Priority(Enum):
+    LOW = "low"
+    MEDIUM = "medium"
+    HIGH = "high"
+    URGENT = "urgent"
+
+# Database initialization
+def init_database():
+    """Initialize SQLite database with enhanced schema."""
+    conn = sqlite3.connect('hr_bot.db')
+    cursor = conn.cursor()
+    
+    # Employees table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS employees (
+            employee_id TEXT PRIMARY KEY,
+            first_name TEXT NOT NULL,
+            last_name TEXT NOT NULL,
+            department TEXT,
+            position TEXT,
+            email TEXT UNIQUE,
+            phone_number TEXT UNIQUE,
+            join_date TEXT,
+            status TEXT DEFAULT 'active',
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+    ''')
+    
+    # User sessions table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS user_sessions (
+            phone_number TEXT PRIMARY KEY,
+            session_data TEXT,
+            last_active TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        )
+    ''')
+    
+    # Leave requests table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS leave_requests (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id TEXT NOT NULL,
+            leave_type TEXT NOT NULL,
+            start_date TEXT NOT NULL,
+            end_date TEXT NOT NULL,
+            reason TEXT,
+            status TEXT DEFAULT 'pending',
+            approver_id TEXT,
+            approval_date TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
+            FOREIGN KEY (approver_id) REFERENCES employees (employee_id)
+        )
+    ''')
+    
+    # Support tickets table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS support_tickets (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            ticket_id TEXT UNIQUE NOT NULL,
+            employee_id TEXT NOT NULL,
+            category TEXT NOT NULL,
+            subject TEXT NOT NULL,
+            description TEXT NOT NULL,
+            priority TEXT DEFAULT 'medium',
+            status TEXT DEFAULT 'open',
+            assigned_to TEXT,
+            resolution TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employee_id) REFERENCES employees (employee_id),
+            FOREIGN KEY (assigned_to) REFERENCES employees (employee_id)
+        )
+    ''')
+    
+    # Message history table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS message_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            phone_number TEXT NOT NULL,
+            employee_id TEXT,
+            message_type TEXT NOT NULL,
+            message_content TEXT NOT NULL,
+            response_content TEXT NOT NULL,
+            response_time REAL,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+        )
+    ''')
+    
+    # Analytics table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS analytics (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            event_type TEXT NOT NULL,
+            event_data TEXT,
+            phone_number TEXT,
+            employee_id TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+        )
+    ''')
+    
+    # Notifications table
+    cursor.execute('''
+        CREATE TABLE IF NOT EXISTS notifications (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            employee_id TEXT NOT NULL,
+            notification_type TEXT NOT NULL,
+            content TEXT NOT NULL,
+            status TEXT DEFAULT 'pending',
+            scheduled_for TEXT,
+            sent_at TEXT,
+            created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (employee_id) REFERENCES employees (employee_id)
+        )
+    ''')
+    
+    conn.commit()
+    conn.close()
+    logging.info("Database initialized successfully with enhanced schema.")
+
+# Initialize database on startup
+init_database()
+
+# Enhanced database operations
+class DatabaseManager:
+    def __init__(self):
+        self.db_path = 'hr_bot.db'
+    
+    def get_connection(self):
+        return sqlite3.connect(self.db_path)
+    
+    def save_employee(self, employee: Employee):
+        """Save or update employee record."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT OR REPLACE INTO employees 
+                (employee_id, first_name, last_name, department, position, email, phone_number, join_date, status, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
+            ''', (
+                employee.employee_id,
+                employee.first_name,
+                employee.last_name,
+                employee.department,
+                employee.position,
+                employee.email,
+                employee.phone_number,
+                employee.join_date,
+                employee.status,
+                employee.created_at
+            ))
+            conn.commit()
+            conn.close()
+            logging.info(f"Employee {employee.employee_id} saved successfully.")
+            return True
+        except Exception as e:
+            logging.error(f"Error saving employee: {e}")
+            return False
+    
+    def get_employee_by_id(self, employee_id: str) -> Optional[Employee]:
+        """Get employee by ID."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM employees WHERE employee_id = ?', (employee_id,))
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                return Employee(
+                    employee_id=result[0],
+                    first_name=result[1],
+                    last_name=result[2],
+                    department=result[3],
+                    position=result[4],
+                    email=result[5],
+                    phone_number=result[6],
+                    join_date=result[7],
+                    status=result[8],
+                    created_at=result[9]
+                )
+            return None
+        except Exception as e:
+            logging.error(f"Error getting employee: {e}")
+            return None
+    
+    def get_employee_by_phone(self, phone_number: str) -> Optional[Employee]:
+        """Get employee by phone number."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM employees WHERE phone_number = ?', (phone_number,))
+            result = cursor.fetchone()
+            conn.close()
+            
+            if result:
+                return Employee(
+                    employee_id=result[0],
+                    first_name=result[1],
+                    last_name=result[2],
+                    department=result[3],
+                    position=result[4],
+                    email=result[5],
+                    phone_number=result[6],
+                    join_date=result[7],
+                    status=result[8],
+                    created_at=result[9]
+                )
+            return None
+        except Exception as e:
+            logging.error(f"Error getting employee by phone: {e}")
+            return None
+    
+    def save_leave_request(self, leave_request: LeaveRequest) -> bool:
+        """Save leave request."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO leave_requests 
+                (employee_id, leave_type, start_date, end_date, reason, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                leave_request.employee_id,
+                leave_request.leave_type,
+                leave_request.start_date,
+                leave_request.end_date,
+                leave_request.reason,
+                leave_request.status,
+                leave_request.created_at
+            ))
+            conn.commit()
+            conn.close()
+            logging.info(f"Leave request saved for employee {leave_request.employee_id}")
+            return True
+        except Exception as e:
+            logging.error(f"Error saving leave request: {e}")
+            return False
+    
+    def save_ticket(self, ticket: Ticket) -> bool:
+        """Save support ticket."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO support_tickets 
+                (ticket_id, employee_id, category, subject, description, priority, status, created_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            ''', (
+                ticket.ticket_id,
+                ticket.employee_id,
+                ticket.category,
+                ticket.subject,
+                ticket.description,
+                ticket.priority,
+                ticket.status,
+                ticket.created_at
+            ))
+            conn.commit()
+            conn.close()
+            logging.info(f"Support ticket {ticket.ticket_id} saved")
+            return True
+        except Exception as e:
+            logging.error(f"Error saving support ticket: {e}")
+            return False
+    
+    def log_message(self, phone_number: str, employee_id: Optional[str], message_type: str, 
+                   message_content: str, response_content: str, response_time: float):
+        """Log message history."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO message_history 
+                (phone_number, employee_id, message_type, message_content, response_content, response_time)
+                VALUES (?, ?, ?, ?, ?, ?)
+            ''', (
+                phone_number,
+                employee_id,
+                message_type,
+                message_content,
+                response_content,
+                response_time
+            ))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logging.error(f"Error logging message: {e}")
+    
+    def log_analytics(self, event_type: str, event_data: dict, phone_number: str, employee_id: Optional[str]):
+        """Log analytics event."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO analytics 
+                (event_type, event_data, phone_number, employee_id)
+                VALUES (?, ?, ?, ?)
+            ''', (
+                event_type,
+                json.dumps(event_data),
+                phone_number,
+                employee_id
+            ))
+            conn.commit()
+            conn.close()
+        except Exception as e:
+            logging.error(f"Error logging analytics: {e}")
+    
+    def schedule_notification(self, employee_id: str, notification_type: str, content: str, scheduled_for: str):
+        """Schedule a notification."""
+        try:
+            conn = self.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO notifications 
+                (employee_id, notification_type, content, scheduled_for)
+                VALUES (?, ?, ?, ?)
+            ''', (
+                employee_id,
+                notification_type,
+                content,
+                scheduled_for
+            ))
+            conn.commit()
+            conn.close()
+            logging.info(f"Notification scheduled for employee {employee_id}")
+            return True
+        except Exception as e:
+            logging.error(f"Error scheduling notification: {e}")
+            return False
+
+# Initialize database manager
+db_manager = DatabaseManager()
+
+# Enhanced session management
+class SessionManager:
+    def __init__(self):
+        self.db_manager = db_manager
+        self.timeout_minutes = 30
+    
+    def get_session(self, phone_number: str) -> Dict:
+        """Get or create user session with database persistence."""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('SELECT * FROM user_sessions WHERE phone_number = ?', (phone_number,))
+            session_data = cursor.fetchone()
+            
+            now = datetime.now()
+            
+            if session_data:
+                last_active = datetime.fromisoformat(session_data[3])
+                if (now - last_active) <= timedelta(minutes=self.timeout_minutes):
+                    # Update last active
+                    cursor.execute('''
+                        UPDATE user_sessions 
+                        SET last_active = ? 
+                        WHERE phone_number = ?
+                    ''', (now.isoformat(), phone_number))
+                    conn.commit()
+                    
+                    # Return session data
+                    return json.loads(session_data[2])
+            
+            # Create new session
+            new_session = {
+                'state': 'initial',
+                'employee_id': None,
+                'conversation_history': [],
+                'current_form': None,
+                'last_action': None
+            }
+            
+            cursor.execute('''
+                INSERT OR REPLACE INTO user_sessions 
+                (phone_number, session_data, last_active)
+                VALUES (?, ?, ?)
+            ''', (
+                phone_number,
+                json.dumps(new_session),
+                now.isoformat()
+            ))
+            conn.commit()
+            conn.close()
+            
+            return new_session
+            
+        except Exception as e:
+            logging.error(f"Error getting session: {e}")
+            return {
+                'state': 'initial',
+                'employee_id': None,
+                'conversation_history': [],
+                'current_form': None,
+                'last_action': None
+            }
+    
+    def update_session(self, phone_number: str, session_data: Dict):
+        """Update session data in database."""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('''
+                UPDATE user_sessions 
+                SET session_data = ?, last_active = ?
+                WHERE phone_number = ?
+            ''', (
+                json.dumps(session_data),
+                datetime.now().isoformat(),
+                phone_number
+            ))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logging.error(f"Error updating session: {e}")
+            return False
+    
+    def clear_session(self, phone_number: str):
+        """Clear user session."""
+        try:
+            conn = self.db_manager.get_connection()
+            cursor = conn.cursor()
+            cursor.execute('DELETE FROM user_sessions WHERE phone_number = ?', (phone_number,))
+            conn.commit()
+            conn.close()
+            return True
+        except Exception as e:
+            logging.error(f"Error clearing session: {e}")
+            return False
+
+# Initialize session manager
+session_manager = SessionManager()
+
+# Enhanced form handling
+class FormHandler:
+    def __init__(self):
+        self.db_manager = db_manager
+        self.session_manager = session_manager
+    
+    def handle_leave_request(self, session: Dict, user_input: str) -> tuple[str, bool]:
+        """Handle leave request form submission."""
+        form = session.get('current_form', {})
+        
+        if 'step' not in form:
+            form['step'] = 'leave_type'
+            form['data'] = {}
+        
+        if form['step'] == 'leave_type':
+            leave_types = ['annual', 'sick', 'maternity', 'paternity', 'bereavement', 'study']
+            if user_input.lower() in leave_types:
+                form['data']['leave_type'] = user_input.lower()
+                form['step'] = 'start_date'
+                return "📅 Enter start date (YYYY-MM-DD format):", False
+            else:
+                return f"Please select a valid leave type: {', '.join(leave_types)}", False
+        
+        elif form['step'] == 'start_date':
+            try:
+                start_date = datetime.strptime(user_input, '%Y-%m-%d')
+                if start_date.date() < datetime.now().date():
+                    return "Start date cannot be in the past. Please enter a future date (YYYY-MM-DD):", False
+                form['data']['start_date'] = user_input
+                form['step'] = 'end_date'
+                return "📅 Enter end date (YYYY-MM-DD format):", False
+            except ValueError:
+                return "Invalid date format. Please use YYYY-MM-DD (e.g., 2024-03-15):", False
+        
+        elif form['step'] == 'end_date':
+            try:
+                end_date = datetime.strptime(user_input, '%Y-%m-%d')
+                start_date = datetime.strptime(form['data']['start_date'], '%Y-%m-%d')
+                if end_date <= start_date:
+                    return "End date must be after start date. Please enter a valid end date:", False
+                form['data']['end_date'] = user_input
+                form['step'] = 'reason'
+                return "📝 Enter reason for leave (optional, type 'skip' to skip):", False
+            except ValueError:
+                return "Invalid date format. Please use YYYY-MM-DD:", False
+        
+        elif form['step'] == 'reason':
+            if user_input.lower() != 'skip':
+                form['data']['reason'] = user_input
+            else:
+                form['data']['reason'] = ""
+            
+            # Create and save leave request
+            leave_request = LeaveRequest(
+                employee_id=session.get('employee_id', 'UNKNOWN'),
+                leave_type=form['data']['leave_type'],
+                start_date=form['data']['start_date'],
+                end_date=form['data']['end_date'],
+                reason=form['data']['reason']
+            )
+            
+            if self.db_manager.save_leave_request(leave_request):
+                # Schedule notification for HR
+                self.db_manager.schedule_notification(
+                    employee_id='HR_ADMIN',  # Special ID for HR admin
+                    notification_type='leave_request',
+                    content=f"New leave request from {session.get('employee_id')}: {leave_request.leave_type} ({leave_request.start_date} to {leave_request.end_date})",
+                    scheduled_for=datetime.now().isoformat()
+                )
+                
+                return f"✅ Leave request submitted successfully!\n\n" \
+                       f"Type: {leave_request.leave_type.title()}\n" \
+                       f"Dates: {leave_request.start_date} to {leave_request.end_date}\n" \
+                       f"Status: Pending approval\n\n" \
+                       f"You'll receive updates via WhatsApp. Type 'menu' for more options!", True
+            else:
+                return "❌ Failed to submit leave request. Please try again or contact HR.", True
+    
+    def handle_support_ticket(self, session: Dict, user_input: str) -> tuple[str, bool]:
+        """Handle support ticket form submission."""
+        form = session.get('current_form', {})
+        
+        if 'step' not in form:
+            form['step'] = 'category'
+            form['data'] = {}
+        
+        if form['step'] == 'category':
+            categories = ['it', 'hr', 'facilities', 'payroll', 'benefits', 'other']
+            if user_input.lower() in categories:
+                form['data']['category'] = user_input.lower()
+                form['step'] = 'subject'
+                return "📝 Enter ticket subject/title:", False
+            else:
+                return f"Please select a valid category: {', '.join(categories)}", False
+        
+        elif form['step'] == 'subject':
+            if len(user_input) < 5:
+                return "Subject is too short. Please provide a descriptive subject:", False
+            form['data']['subject'] = user_input
+            form['step'] = 'description'
+            return "📄 Enter detailed description of your issue:", False
+        
+        elif form['step'] == 'description':
+            if len(user_input) < 10:
+                return "Please provide more details about your issue:", False
+            form['data']['description'] = user_input
+            form['step'] = 'priority'
+            return "⚡ Select priority level (low, medium, high, urgent):", False
+        
+        elif form['step'] == 'priority':
+            priorities = ['low', 'medium', 'high', 'urgent']
+            if user_input.lower() in priorities:
+                form['data']['priority'] = user_input.lower()
+                
+                # Generate ticket ID
+                ticket_id = f"TK{datetime.now().strftime('%Y%m%d%H%M%S')}"
+                
+                # Create and save ticket
+                ticket = Ticket(
+                    ticket_id=ticket_id,
+                    employee_id=session.get('employee_id', 'UNKNOWN'),
+                    category=form['data']['category'],
+                    subject=form['data']['subject'],
+                    description=form['data']['description'],
+                    priority=form['data']['priority']
+                )
+                
+                if self.db_manager.save_ticket(ticket):
+                    # Schedule notification based on priority
+                    notification_delay = {
+                        'urgent': timedelta(minutes=5),
+                        'high': timedelta(hours=1),
+                        'medium': timedelta(hours=4),
+                        'low': timedelta(hours=24)
+                    }
+                    
+                    scheduled_time = datetime.now() + notification_delay[ticket.priority]
+                    self.db_manager.schedule_notification(
+                        employee_id='SUPPORT_TEAM',  # Special ID for support team
+                        notification_type='support_ticket',
+                        content=f"New {ticket.priority} priority ticket: {ticket.subject} ({ticket.ticket_id})",
+                        scheduled_for=scheduled_time.isoformat()
+                    )
+                    
+                    return f"🎫 Support ticket created successfully!\n\n" \
+                           f"Ticket ID: {ticket.ticket_id}\n" \
+                           f"Category: {ticket.category.title()}\n" \
+                           f"Priority: {ticket.priority.title()}\n" \
+                           f"Status: Open\n\n" \
+                           f"Expected response time: {notification_delay[ticket.priority]}\n" \
+                           f"You'll receive updates via WhatsApp. Type 'menu' for more options!", True
+                else:
+                    return "❌ Failed to create support ticket. Please try again or contact support directly.", True
+            else:
+                return f"Please select a valid priority: {', '.join(priorities)}", False
+        
+        return "Something went wrong. Please try again.", True
+
+# Initialize form handler
+form_handler = FormHandler()
+
+# Enhanced message processing
+def process_message(phone_number: str, message: str) -> str:
+    """Process incoming WhatsApp messages."""
+    start_time = time.time()
+    session = get_user_session(phone_number)
+    
+    try:
+        # Get employee info if available
+        employee = db_manager.get_employee_by_phone(phone_number)
+        employee_id = employee.employee_id if employee else None
+        
+        # Log incoming message
+        db_manager.log_message(
+            phone_number=phone_number,
+            employee_id=employee_id,
+            message_type="incoming",
+            message_content=message,
+            response_content="",
+            response_time=0
+        )
+        
+        # Check for menu navigation or exit
+        if message.lower() in ["menu", "main", "start"]:
+            session.clear()
+            response = menu_manager.get_menu_text("MAIN_MENU")
+            update_user_session(phone_number, current_menu="MAIN_MENU")
+            return response
+            
+        if message.lower() in ["exit", "quit", "bye"]:
+            session.clear()
+            return "👋 Thank you for using ElevateHR Bot. Have a great day!"
+        
+        # Handle active forms if any
+        if "form_type" in session:
+            form_type = session["form_type"]
+            if form_type == "leave_request":
+                response, is_complete = form_handler.handle_leave_request(session, message)
+                if is_complete:
+                    session.pop("form_type")
+                    response += "\n\n" + menu_manager.get_menu_text(session.get("current_menu", "MAIN_MENU"))
+                update_user_session(phone_number, **session)
+                return response
+            elif form_type == "support_ticket":
+                response, is_complete = form_handler.handle_support_ticket(session, message)
+                if is_complete:
+                    session.pop("form_type")
+                    response += "\n\n" + menu_manager.get_menu_text(session.get("current_menu", "MAIN_MENU"))
+                update_user_session(phone_number, **session)
+                return response
+        
+        # Handle menu navigation
+        if "current_menu" in session:
+            response, updated_session = menu_manager.handle_menu_action(session, message)
+            
+            # Handle specific actions
+            action = updated_session.get("current_action")
+            if action:
+                if employee_id:
+                    if action in ["view_profile", "update_info", "view_payslips", "view_attendance", "view_benefits"]:
+                        response = employee_service.handle_action(action, employee_id)
+                    elif action in ["attendance_report", "leave_report", "performance_report"]:
+                        response = reporting_service.handle_report_action(action, employee_id)
+                    elif action == "request_leave":
+                        session["form_type"] = "leave_request"
+                        session["step"] = 1
+                        response = form_handler.handle_leave_request(session, "")[0]
+                    elif action == "create_ticket":
+                        session["form_type"] = "support_ticket"
+                        session["step"] = 1
+                        response = form_handler.handle_support_ticket(session, "")[0]
+                else:
+                    response = "⚠️ Please register as an employee first to access this feature."
+            
+            update_user_session(phone_number, **updated_session)
+            return response
+        
+        # Handle natural language queries with AI
+        context = get_conversation_context(phone_number)
+        ai_response = get_gemini_response(message, context)
+        
+        # Log response time
+        response_time = time.time() - start_time
+        db_manager.log_message(
+            phone_number=phone_number,
+            employee_id=employee_id,
+            message_type="outgoing",
+            message_content=message,
+            response_content=ai_response,
+            response_time=response_time
+        )
+        
+        # Log analytics
+        db_manager.log_analytics(
+            event_type="message_processed",
+            event_data={
+                "response_time": response_time,
+                "message_length": len(message),
+                "response_length": len(ai_response)
+            },
+            phone_number=phone_number,
+            employee_id=employee_id
+        )
+        
+        return ai_response
+        
+    except Exception as e:
+        logging.error(f"Error processing message: {e}")
+        return "❌ Sorry, I encountered an error. Please try again or type 'menu' to start over."
 
 # User session storage (WARNING: NOT PRODUCTION READY - use a database like Redis/PostgreSQL for persistence)
 user_sessions = {}
@@ -332,6 +1086,555 @@ def get_conversation_context(phone_number):
             context += f"User: {conv['user']}\nBot: {conv['bot']}\n"
     
     return context
+
+class MenuManager:
+    """Manages the menu system with submenus and navigation."""
+    
+    MAIN_MENU = {
+        "1": {"name": "Employee Self-Service", "submenu": "EMPLOYEE_MENU"},
+        "2": {"name": "Leave Management", "submenu": "LEAVE_MENU"},
+        "3": {"name": "Support & Help", "submenu": "SUPPORT_MENU"},
+        "4": {"name": "Reports & Analytics", "submenu": "REPORTS_MENU"},
+        "5": {"name": "Profile & Settings", "submenu": "PROFILE_MENU"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    EMPLOYEE_MENU = {
+        "1": {"name": "View Profile", "action": "view_profile"},
+        "2": {"name": "Update Information", "action": "update_info"},
+        "3": {"name": "View Payslips", "action": "view_payslips"},
+        "4": {"name": "View Attendance", "action": "view_attendance"},
+        "5": {"name": "View Benefits", "action": "view_benefits"},
+        "9": {"name": "Back to Main Menu", "action": "main_menu"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    LEAVE_MENU = {
+        "1": {"name": "Request Leave", "action": "request_leave"},
+        "2": {"name": "View Leave Balance", "action": "view_leave_balance"},
+        "3": {"name": "View Leave History", "action": "view_leave_history"},
+        "4": {"name": "Cancel Leave Request", "action": "cancel_leave"},
+        "9": {"name": "Back to Main Menu", "action": "main_menu"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    SUPPORT_MENU = {
+        "1": {"name": "Create Support Ticket", "action": "create_ticket"},
+        "2": {"name": "View My Tickets", "action": "view_tickets"},
+        "3": {"name": "FAQs", "action": "view_faqs"},
+        "4": {"name": "Chat with HR", "action": "chat_hr"},
+        "9": {"name": "Back to Main Menu", "action": "main_menu"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    REPORTS_MENU = {
+        "1": {"name": "Attendance Report", "action": "attendance_report"},
+        "2": {"name": "Leave Report", "action": "leave_report"},
+        "3": {"name": "Performance Report", "action": "performance_report"},
+        "9": {"name": "Back to Main Menu", "action": "main_menu"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    PROFILE_MENU = {
+        "1": {"name": "Change Password", "action": "change_password"},
+        "2": {"name": "Update Contact Info", "action": "update_contact"},
+        "3": {"name": "Notification Settings", "action": "notification_settings"},
+        "9": {"name": "Back to Main Menu", "action": "main_menu"},
+        "0": {"name": "Exit", "action": "exit"}
+    }
+    
+    def __init__(self):
+        self.menus = {
+            "MAIN_MENU": self.MAIN_MENU,
+            "EMPLOYEE_MENU": self.EMPLOYEE_MENU,
+            "LEAVE_MENU": self.LEAVE_MENU,
+            "SUPPORT_MENU": self.SUPPORT_MENU,
+            "REPORTS_MENU": self.REPORTS_MENU,
+            "PROFILE_MENU": self.PROFILE_MENU
+        }
+    
+    def get_menu_text(self, menu_name: str) -> str:
+        """Generate formatted menu text for display."""
+        if menu_name not in self.menus:
+            return "Invalid menu"
+            
+        menu = self.menus[menu_name]
+        menu_title = menu_name.replace("_", " ").title()
+        
+        menu_text = f"📱 *{menu_title}*\n\n"
+        for key, item in menu.items():
+            menu_text += f"{key}. {item['name']}\n"
+        
+        menu_text += "\nPlease reply with a number to select an option."
+        return menu_text
+    
+    def get_action(self, menu_name: str, choice: str) -> tuple[str, Optional[str]]:
+        """Get the action and submenu (if any) for a menu choice."""
+        if menu_name not in self.menus or choice not in self.menus[menu_name]:
+            return "invalid_choice", None
+            
+        menu_item = self.menus[menu_name][choice]
+        if "submenu" in menu_item:
+            return "show_menu", menu_item["submenu"]
+        return menu_item["action"], None
+
+    def handle_menu_action(self, session: Dict, choice: str) -> tuple[str, Dict]:
+        """Handle menu selection and return appropriate response."""
+        current_menu = session.get("current_menu", "MAIN_MENU")
+        action, submenu = self.get_action(current_menu, choice)
+        
+        if action == "invalid_choice":
+            return "⚠️ Invalid option. Please try again.", session
+            
+        if action == "show_menu":
+            session["current_menu"] = submenu
+            return self.get_menu_text(submenu), session
+            
+        if action == "main_menu":
+            session["current_menu"] = "MAIN_MENU"
+            return self.get_menu_text("MAIN_MENU"), session
+            
+        if action == "exit":
+            session.clear()
+            return "👋 Thank you for using ElevateHR Bot. Have a great day!", session
+            
+        # Update session with current action
+        session["current_action"] = action
+        return f"You selected: {action}", session
+
+# Initialize menu manager
+menu_manager = MenuManager()
+
+class EmployeeService:
+    """Handles employee self-service features."""
+    
+    def __init__(self, db_manager: DatabaseManager):
+        self.db = db_manager
+    
+    def view_profile(self, employee_id: str) -> str:
+        """Get formatted employee profile information."""
+        employee = self.db.get_employee_by_id(employee_id)
+        if not employee:
+            return "⚠️ Employee not found."
+        
+        return (
+            f"👤 *Employee Profile*\n\n"
+            f"ID: {employee.employee_id}\n"
+            f"Name: {employee.first_name} {employee.last_name}\n"
+            f"Department: {employee.department}\n"
+            f"Position: {employee.position}\n"
+            f"Email: {employee.email}\n"
+            f"Phone: {employee.phone_number}\n"
+            f"Join Date: {employee.join_date}\n"
+            f"Status: {employee.status.title()}"
+        )
+    
+    def update_info(self, employee_id: str, field: str, value: str) -> str:
+        """Update employee information."""
+        employee = self.db.get_employee_by_id(employee_id)
+        if not employee:
+            return "⚠️ Employee not found."
+            
+        allowed_fields = ["email", "phone_number"]
+        if field not in allowed_fields:
+            return f"⚠️ Cannot update {field}. Only {', '.join(allowed_fields)} can be updated."
+            
+        # Validate input
+        if field == "email" and not re.match(r"[^@]+@[^@]+\.[^@]+", value):
+            return "⚠️ Invalid email format."
+        if field == "phone_number" and not re.match(r"^\+\d{1,3}\d{10}$", value):
+            return "⚠️ Invalid phone number format. Use international format (+XXX)."
+            
+        setattr(employee, field, value)
+        if self.db.save_employee(employee):
+            return f"✅ Successfully updated {field} to {value}."
+        return "❌ Failed to update information. Please try again."
+    
+    def view_payslips(self, employee_id: str) -> str:
+        """Get list of recent payslips."""
+        # TODO: Implement payslip retrieval from database
+        return (
+            "🧾 *Recent Payslips*\n\n"
+            "1. March 2024\n"
+            "2. February 2024\n"
+            "3. January 2024\n\n"
+            "Reply with the number to view details."
+        )
+    
+    def view_attendance(self, employee_id: str) -> str:
+        """Get employee attendance summary."""
+        # TODO: Implement attendance retrieval from database
+        return (
+            "📊 *Attendance Summary (March 2024)*\n\n"
+            "Present: 18 days\n"
+            "Absent: 2 days\n"
+            "Late: 1 day\n"
+            "Early Leave: 0 days\n\n"
+            "Attendance Rate: 90%"
+        )
+    
+    def view_benefits(self, employee_id: str) -> str:
+        """Get employee benefits information."""
+        # TODO: Implement benefits retrieval from database
+        return (
+            "🎁 *Your Benefits*\n\n"
+            "Health Insurance:\n"
+            "- Medical Coverage: $50,000\n"
+            "- Dental Coverage: Basic Plan\n\n"
+            "Leave Balance:\n"
+            "- Annual Leave: 14 days\n"
+            "- Sick Leave: 7 days\n"
+            "- Personal Leave: 3 days\n\n"
+            "Other Benefits:\n"
+            "- Transportation Allowance\n"
+            "- Meal Allowance\n"
+            "- Professional Development"
+        )
+    
+    def handle_action(self, action: str, employee_id: str, **kwargs) -> str:
+        """Route and handle employee self-service actions."""
+        action_handlers = {
+            "view_profile": lambda: self.view_profile(employee_id),
+            "update_info": lambda: self.update_info(employee_id, kwargs.get("field"), kwargs.get("value")),
+            "view_payslips": lambda: self.view_payslips(employee_id),
+            "view_attendance": lambda: self.view_attendance(employee_id),
+            "view_benefits": lambda: self.view_benefits(employee_id)
+        }
+        
+        handler = action_handlers.get(action)
+        if not handler:
+            return "⚠️ Invalid action requested."
+        
+        try:
+            return handler()
+        except Exception as e:
+            logging.error(f"Error in EmployeeService.handle_action: {e}")
+            return "❌ An error occurred. Please try again later."
+
+# Initialize employee service
+employee_service = EmployeeService(db_manager)
+
+class ReportingService:
+    """Handles analytics and reporting features."""
+    
+    def __init__(self, db_manager: DatabaseManager):
+        self.db = db_manager
+    
+    def get_attendance_report(self, employee_id: str, month: Optional[str] = None) -> str:
+        """Generate attendance report for an employee."""
+        if not month:
+            month = datetime.now().strftime("%B %Y")
+            
+        # TODO: Implement actual attendance data retrieval
+        return (
+            f"📊 *Attendance Report - {month}*\n\n"
+            "Daily Summary:\n"
+            "- Regular Days: 18\n"
+            "- Weekends: 8\n"
+            "- Holidays: 2\n"
+            "- Leave Days: 2\n\n"
+            "Time Analysis:\n"
+            "- Average Check-in: 8:45 AM\n"
+            "- Average Check-out: 5:15 PM\n"
+            "- Total Work Hours: 160\n"
+            "- Overtime Hours: 5\n\n"
+            "Compliance:\n"
+            "- Late Days: 2\n"
+            "- Early Departures: 1\n"
+            "- Missed Check-ins: 0\n"
+            "- Attendance Rate: 90%"
+        )
+    
+    def get_leave_report(self, employee_id: str, year: Optional[int] = None) -> str:
+        """Generate leave report for an employee."""
+        if not year:
+            year = datetime.now().year
+            
+        # TODO: Implement actual leave data retrieval
+        return (
+            f"📅 *Leave Report - {year}*\n\n"
+            "Leave Balance:\n"
+            "- Annual Leave: 14 days remaining\n"
+            "- Sick Leave: 7 days remaining\n"
+            "- Personal Leave: 3 days remaining\n\n"
+            "Leave History:\n"
+            "1. Mar 15-16: Annual Leave (2 days)\n"
+            "2. Feb 5: Sick Leave (1 day)\n"
+            "3. Jan 22-24: Annual Leave (3 days)\n\n"
+            "Pending Requests:\n"
+            "- Apr 10-12: Annual Leave (Pending)\n\n"
+            "Statistics:\n"
+            "- Total Days Taken: 6\n"
+            "- Planned Leave: 3\n"
+            "- Emergency Leave: 1"
+        )
+    
+    def get_performance_report(self, employee_id: str, period: Optional[str] = None) -> str:
+        """Generate performance report for an employee."""
+        if not period:
+            period = f"Q{(datetime.now().month-1)//3 + 1} {datetime.now().year}"
+            
+        # TODO: Implement actual performance data retrieval
+        return (
+            f"⭐ *Performance Report - {period}*\n\n"
+            "Key Performance Indicators:\n"
+            "1. Task Completion: 95%\n"
+            "2. Quality of Work: 4.5/5\n"
+            "3. Timeliness: 4.2/5\n"
+            "4. Team Collaboration: 4.8/5\n\n"
+            "Goals Progress:\n"
+            "- Complete Project X: 80%\n"
+            "- Skills Development: On Track\n"
+            "- Client Satisfaction: Exceeded\n\n"
+            "Achievements:\n"
+            "- Employee of the Month (Feb)\n"
+            "- 3 Client Appreciations\n"
+            "- 2 Innovation Ideas\n\n"
+            "Areas for Development:\n"
+            "- Time Management\n"
+            "- Technical Documentation"
+        )
+    
+    def handle_report_action(self, action: str, employee_id: str, **kwargs) -> str:
+        """Route and handle reporting actions."""
+        action_handlers = {
+            "attendance_report": lambda: self.get_attendance_report(
+                employee_id, 
+                kwargs.get("month")
+            ),
+            "leave_report": lambda: self.get_leave_report(
+                employee_id,
+                kwargs.get("year")
+            ),
+            "performance_report": lambda: self.get_performance_report(
+                employee_id,
+                kwargs.get("period")
+            )
+        }
+        
+        handler = action_handlers.get(action)
+        if not handler:
+            return "⚠️ Invalid report type requested."
+            
+        try:
+            return handler()
+        except Exception as e:
+            logging.error(f"Error in ReportingService.handle_report_action: {e}")
+            return "❌ An error occurred while generating the report. Please try again later."
+
+# Initialize reporting service
+reporting_service = ReportingService(db_manager)
+
+class NotificationService:
+    """Handles automated notifications and reminders."""
+    
+    def __init__(self, db_manager: DatabaseManager, twilio_client: Optional[Client] = None):
+        self.db = db_manager
+        self.twilio_client = twilio_client
+        
+        # Start the notification scheduler in a separate thread
+        self.scheduler_thread = threading.Thread(target=self._run_scheduler, daemon=True)
+        self.scheduler_thread.start()
+    
+    def _run_scheduler(self):
+        """Run the scheduler for periodic tasks."""
+        # Schedule daily tasks
+        schedule.every().day.at("09:00").do(self.send_daily_reminders)
+        schedule.every().day.at("17:00").do(self.send_end_day_reminders)
+        
+        # Schedule weekly tasks
+        schedule.every().monday.at("09:30").do(self.send_weekly_updates)
+        
+        # Schedule monthly tasks
+        schedule.every().day.at("00:01").do(self.check_monthly_tasks)
+        
+        while True:
+            schedule.run_pending()
+            time.sleep(60)
+    
+    def send_notification(self, phone_number: str, message: str, priority: str = "normal") -> bool:
+        """Send a WhatsApp notification to a user."""
+        if not self.twilio_client:
+            logging.warning("Twilio client not initialized. Notification not sent.")
+            return False
+            
+        try:
+            self.twilio_client.messages.create(
+                from_=f"whatsapp:{TWILIO_WHATSAPP_NUMBER}",
+                body=message,
+                to=f"whatsapp:{phone_number}"
+            )
+            
+            # Log the notification
+            self.db.log_analytics(
+                event_type="notification_sent",
+                event_data={
+                    "priority": priority,
+                    "message_length": len(message)
+                },
+                phone_number=phone_number,
+                employee_id=None  # Can be updated if employee mapping is available
+            )
+            return True
+            
+        except TwilioRestException as e:
+            logging.error(f"Failed to send notification: {e}")
+            return False
+    
+    def send_daily_reminders(self):
+        """Send daily reminders and notifications."""
+        # Get all active employees
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Check for pending leave requests
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name, COUNT(l.id) as pending_count
+                FROM employees e
+                JOIN leave_requests l ON e.employee_id = l.employee_id
+                WHERE l.status = 'pending'
+                GROUP BY e.employee_id
+                HAVING pending_count > 0
+            """)
+            
+            for phone, name, count in cursor.fetchall():
+                message = (
+                    f"🔔 Good morning {name}!\n\n"
+                    f"You have {count} pending leave request(s) awaiting approval."
+                )
+                self.send_notification(phone, message)
+            
+            # Check for upcoming deadlines
+            today = datetime.now().date()
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name
+                FROM employees e
+                WHERE e.status = 'active'
+                AND EXISTS (
+                    SELECT 1 FROM tasks t
+                    WHERE t.employee_id = e.employee_id
+                    AND t.deadline = ?
+                    AND t.status != 'completed'
+                )
+            """, (today.isoformat(),))
+            
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"⚠️ Hi {name}!\n\n"
+                    "You have tasks due today. Please check your dashboard."
+                )
+                self.send_notification(phone, message, priority="high")
+                
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def send_end_day_reminders(self):
+        """Send end-of-day reminders."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Check for missing time logs
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name
+                FROM employees e
+                WHERE e.status = 'active'
+                AND NOT EXISTS (
+                    SELECT 1 FROM time_logs t
+                    WHERE t.employee_id = e.employee_id
+                    AND t.log_date = ?
+                )
+            """, (datetime.now().date().isoformat(),))
+            
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"⏰ Hi {name}!\n\n"
+                    "Don't forget to log your time for today."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def send_weekly_updates(self):
+        """Send weekly performance and task updates."""
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Get active employees
+            cursor.execute("SELECT employee_id, phone_number, first_name FROM employees WHERE status = 'active'")
+            employees = cursor.fetchall()
+            
+            for emp_id, phone, name in employees:
+                # Generate weekly summary
+                message = (
+                    f"📊 Weekly Update for {name}\n\n"
+                    "Performance Highlights:\n"
+                    "- Tasks Completed: 12\n"
+                    "- On-time Completion: 95%\n"
+                    "- Upcoming Deadlines: 3\n\n"
+                    "Click here to view detailed report."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
+    
+    def check_monthly_tasks(self):
+        """Check and send notifications for monthly tasks."""
+        today = datetime.now()
+        
+        # Only run on the first day of the month
+        if today.day != 1:
+            return
+            
+        conn = self.db.get_connection()
+        cursor = conn.cursor()
+        
+        try:
+            # Notify managers about performance reviews
+            cursor.execute("""
+                SELECT e.phone_number, e.first_name, 
+                       (SELECT COUNT(*) FROM employees e2 WHERE e2.manager_id = e.employee_id) as team_size
+                FROM employees e
+                WHERE e.role = 'manager'
+                AND e.status = 'active'
+            """)
+            
+            for phone, name, team_size in cursor.fetchall():
+                message = (
+                    f"📋 Hi {name}!\n\n"
+                    f"Monthly reminder: You have {team_size} team member(s) "
+                    "due for performance review this month."
+                )
+                self.send_notification(phone, message)
+            
+            # Remind employees about timesheet submission
+            cursor.execute("""
+                SELECT phone_number, first_name
+                FROM employees
+                WHERE status = 'active'
+            """)
+            
+            for phone, name in cursor.fetchall():
+                message = (
+                    f"📅 Hi {name}!\n\n"
+                    "Monthly reminder: Please submit your timesheet "
+                    "for the previous month by end of day."
+                )
+                self.send_notification(phone, message)
+                
+        finally:
+            cursor.close()
+            conn.close()
+
+# Initialize notification service
+notification_service = NotificationService(db_manager, client)
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp_reply():
