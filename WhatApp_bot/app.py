@@ -18,19 +18,70 @@ import threading
 import time
 from dataclasses import dataclass
 from enum import Enum
+import gc  # For garbage collection
 
-# Configure logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+# Configure logging to be less verbose
+logging.basicConfig(
+    level=logging.WARNING,  # Change from INFO to WARNING
+    format='%(asctime)s - %(levelname)s - %(message)s'
+)
 
-load_dotenv()
+# Flask app configuration
 app = Flask(__name__)
+app.config['JSON_AS_ASCII'] = False
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # Limit payload size to 16MB
+
+# Load environment variables
+load_dotenv()
 
 # Environment variables
 TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
 TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")
 TWILIO_WHATSAPP_NUMBER = os.getenv("TWILIO_WHATSAPP_NUMBER")
 GEMINI_API_KEY = os.getenv("GOOGLE_API_KEY")
-ADMIN_PHONE = os.getenv("ADMIN_PHONE", "whatsapp:+1234567890")  # Admin phone for notifications
+ADMIN_PHONE = os.getenv("ADMIN_PHONE", "whatsapp:+1234567890")
+
+# Session configuration
+SESSION_TIMEOUT_MINUTES = 30
+MAX_SESSIONS = 1000  # Limit maximum concurrent sessions
+MAX_CONVERSATION_HISTORY = 3  # Limit conversation history size
+
+# Database connection pool
+def get_db_connection():
+    conn = sqlite3.connect('hr_bot.db', timeout=30)
+    conn.row_factory = sqlite3.Row
+    return conn
+
+# Periodic cleanup function
+def cleanup_old_sessions():
+    """Remove expired sessions to free up memory."""
+    try:
+        current_time = datetime.now()
+        expired_sessions = []
+        
+        for phone_number, session in user_sessions.items():
+            if (current_time - session['last_active']) > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
+                expired_sessions.append(phone_number)
+        
+        for phone_number in expired_sessions:
+            del user_sessions[phone_number]
+            
+        # Force garbage collection
+        gc.collect()
+        
+    except Exception as e:
+        logging.error(f"Error in cleanup_old_sessions: {e}")
+
+# Schedule periodic cleanup
+def run_cleanup_scheduler():
+    """Run cleanup tasks periodically."""
+    while True:
+        cleanup_old_sessions()
+        time.sleep(300)  # Run every 5 minutes
+
+# Start cleanup thread
+cleanup_thread = threading.Thread(target=run_cleanup_scheduler, daemon=True)
+cleanup_thread.start()
 
 # Initialize Twilio client
 if not TWILIO_ACCOUNT_SID or not TWILIO_AUTH_TOKEN:
@@ -133,7 +184,7 @@ class Priority(Enum):
 # Database initialization
 def init_database():
     """Initialize SQLite database with enhanced schema."""
-    conn = sqlite3.connect('hr_bot.db')
+    conn = get_db_connection()
     cursor = conn.cursor()
     
     # Employees table
@@ -258,7 +309,7 @@ class DatabaseManager:
         self.db_path = 'hr_bot.db'
     
     def get_connection(self):
-        return sqlite3.connect(self.db_path)
+        return get_db_connection()
     
     def save_employee(self, employee: Employee):
         """Save or update employee record."""
@@ -799,7 +850,6 @@ def process_message(phone_number: str, message: str) -> str:
 
 # User session storage (WARNING: NOT PRODUCTION READY - use a database like Redis/PostgreSQL for persistence)
 user_sessions = {}
-SESSION_TIMEOUT_MINUTES = 30 # Session will expire after 30 minutes of inactivity
 
 # HR Knowledge Base (kept as is, assume it's comprehensive enough for context)
 HR_KNOWLEDGE_BASE = """
@@ -998,19 +1048,26 @@ def send_main_menu(to_number):
         return False
 
 def get_user_session(phone_number):
-    """Get or create user session, and manage session timeout."""
+    """Get or create user session with memory limits."""
     now = datetime.now()
+    
+    # Check session limit
+    if phone_number not in user_sessions and len(user_sessions) >= MAX_SESSIONS:
+        # Remove oldest session if limit reached
+        oldest_number = min(user_sessions.keys(), key=lambda k: user_sessions[k]['last_active'])
+        del user_sessions[oldest_number]
+    
     if phone_number not in user_sessions or \
        (now - user_sessions[phone_number]['last_active']) > timedelta(minutes=SESSION_TIMEOUT_MINUTES):
-        logging.info(f"Initializing or resetting session for {phone_number}")
         user_sessions[phone_number] = {
-            'state': 'initial', # 'initial', 'ai_mode', 'awaiting_employee_id', 'payroll_inquiry', etc.
+            'state': 'initial',
             'last_action': None,
             'employee_id': None,
             'conversation_history': [],
             'last_active': now
         }
-    user_sessions[phone_number]['last_active'] = now # Update last active timestamp
+    
+    user_sessions[phone_number]['last_active'] = now
     return user_sessions[phone_number]
 
 def update_user_session(phone_number, **kwargs):
@@ -1023,16 +1080,17 @@ def update_user_session(phone_number, **kwargs):
             logging.warning(f"Attempted to update non-existent session key: {key} for {phone_number}")
 
 def add_to_conversation_history(phone_number, user_message, bot_response):
-    """Add message to conversation history for context."""
+    """Add message to conversation history with size limit."""
     session = get_user_session(phone_number)
     session['conversation_history'].append({
-        'user': user_message,
-        'bot': bot_response,
+        'user': user_message[:500],  # Limit message size
+        'bot': bot_response[:1000],  # Limit response size
         'timestamp': datetime.now().isoformat()
     })
-    # Keep only last 3 conversations (user query + bot response pairs) for context to manage token limits
-    if len(session['conversation_history']) > 3:
-        session['conversation_history'] = session['conversation_history'][-3:]
+    
+    # Keep only recent conversations
+    if len(session['conversation_history']) > MAX_CONVERSATION_HISTORY:
+        session['conversation_history'] = session['conversation_history'][-MAX_CONVERSATION_HISTORY:]
 
 def get_conversation_context(phone_number):
     """Generate a context string from the session history for the AI."""
@@ -1468,12 +1526,12 @@ class NotificationPrompt:
     def _get_user_settings(self, employee_id: str) -> dict:
         """Get user's notification settings from database."""
         try:
-            conn = sqlite3.connect('hr_bot.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
                 SELECT notification_settings
-                FROM users
-                WHERE employee_id = ?
+                FROM user_sessions
+                WHERE phone_number = ?
             ''', (employee_id,))
             result = cursor.fetchone()
             conn.close()
@@ -1492,12 +1550,12 @@ class NotificationPrompt:
             current_settings = self._get_user_settings(employee_id)
             current_settings[setting_type] = value
             
-            conn = sqlite3.connect('hr_bot.db')
+            conn = get_db_connection()
             cursor = conn.cursor()
             cursor.execute('''
-                UPDATE users
-                SET notification_settings = ?
-                WHERE employee_id = ?
+                UPDATE user_sessions
+                SET session_data = ?
+                WHERE phone_number = ?
             ''', (json.dumps(current_settings), employee_id))
             conn.commit()
             conn.close()
